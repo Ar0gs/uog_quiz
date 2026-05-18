@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Union of Genius — Live Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --g900:#021a0c;--g800:#042d14;--g700:#064020;--g600:#0a6132;
+  --g500:#0e8244;--g400:#14a85a;--g300:#22cc70;--g200:#6de4a3;
+  --g100:#b8f5d4;--g050:#e6fff2;
+  --bg:#040f07;--bg2:#071510;--bg3:#0c2016;
+  --surface:rgba(14,40,22,0.85);--surface2:rgba(20,55,32,0.7);
+  --border:rgba(34,204,112,0.18);--border2:rgba(34,204,112,0.35);
+  --text:#e8f5ee;--text2:#8fbfa0;--text3:#4d7a5e;
+  --accent:#22cc70;--accent2:#14a85a;--glow:rgba(34,204,112,0.25);
+  --warn:#f5a623;--danger:#e5534b;--info:#58a6ff;
+  --radius:14px;--radius-sm:8px;--radius-lg:20px;--radius-xl:28px;
+  --font-display:'Clash Display',sans-serif;
+  --font-body:'Outfit',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --shadow-glow:0 0 40px rgba(34,204,112,0.2);
+  --shadow-card:0 8px 32px rgba(0,0,0,0.4);
+  --shadow-btn:0 4px 16px rgba(34,204,112,0.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(14,130,68,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 80%,rgba(10,97,50,.1) 0%,transparent 60%),radial-gradient(ellipse 100% 100% at 50% 50%,var(--bg) 30%,var(--bg2) 100%);pointer-events:none}
+body::after{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(34,204,112,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(34,204,112,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh;position:relative;z-index:1;animation:screenIn .45s cubic-bezier(.22,1,.36,1)}
+.screen.active{display:flex;flex-direction:column}
+@keyframes screenIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* TYPOGRAPHY */
+h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-.02em}
+.mono{font-family:var(--font-mono)}
+
+/* LOGO */
+.logo-mark{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+.logo-hex{width:36px;height:36px;background:linear-gradient(135deg,var(--g400),var(--g600));clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;box-shadow:var(--shadow-btn);flex-shrink:0}
+.logo-text{font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;border:none;border-radius:var(--radius);font-family:var(--font-display);font-size:.88rem;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;white-space:nowrap;user-select:none}
+.btn:active{transform:scale(.95)!important}
+.btn-primary{background:linear-gradient(135deg,var(--g400),var(--g600));color:white;box-shadow:var(--shadow-btn)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,204,112,.4)}
+.btn-secondary{background:var(--surface);color:var(--accent);border:1px solid var(--border2)}
+.btn-secondary:hover{background:rgba(34,204,112,.12);border-color:var(--accent)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-danger{background:rgba(229,83,75,.15);color:var(--danger);border:1px solid rgba(229,83,75,.3)}
+.btn-danger:hover{background:rgba(229,83,75,.25)}
+.btn-warn{background:linear-gradient(135deg,#f5a623,#e8890a);color:white}
+.btn-lg{padding:16px 36px;font-size:1rem;border-radius:var(--radius-lg)}
+.btn-sm{padding:8px 16px;font-size:.78rem;border-radius:var(--radius-sm)}
+.btn-xs{padding:5px 12px;font-size:.72rem;border-radius:6px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* INPUTS */
+.field-label{display:block;font-family:var(--font-mono);font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+input,textarea,select{width:100%;padding:12px 16px;background:rgba(14,40,22,.6);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:.95rem;color:var(--text);outline:none;transition:border-color .2s,background .2s,box-shadow .2s}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);background:rgba(14,40,22,.9);box-shadow:0 0 0 3px rgba(34,204,112,.12)}
+select{cursor:pointer}
+select option{background:var(--bg2)}
+textarea{resize:vertical;min-height:70px}
+.form-group{margin-bottom:1.25rem}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;box-shadow:var(--shadow-card);backdrop-filter:blur(12px)}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.badge-green{background:rgba(34,204,112,.15);color:var(--accent);border:1px solid rgba(34,204,112,.3)}
+.badge-warn{background:rgba(245,166,35,.15);color:var(--warn);border:1px solid rgba(245,166,35,.3)}
+.badge-danger{background:rgba(229,83,75,.15);color:var(--danger);border:1px solid rgba(229,83,75,.3)}
+.badge-muted{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)}
+
+/* TOAST */
+#toasts{position:fixed;top:1.25rem;right:1.25rem;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:rgba(10,30,17,.97);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:.85rem;color:var(--text);box-shadow:var(--shadow-card);animation:toastIn .35s cubic-bezier(.34,1.56,.64,1);max-width:320px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(12px)}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.out{animation:toastOut .25s forwards}
+@keyframes toastOut{to{transform:translateX(110%);opacity:0}}
+.toast-icon{font-size:1.1rem;flex-shrink:0}
+.toast-success{border-left:3px solid var(--accent)}
+.toast-error{border-left:3px solid var(--danger)}
+.toast-info{border-left:3px solid var(--info)}
+.toast-warn{border-left:3px solid var(--warn)}
+
+/* MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:9000;background:rgba(2,10,5,.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem}
+.modal-backdrop.open{display:flex;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xl);padding:2.5rem;max-width:560px;width:100%;box-shadow:var(--shadow-glow),var(--shadow-card);animation:modalIn .4s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto}
+@keyframes modalIn{from{transform:scale(.88);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* SUPABASE SETUP MODAL */
+#setupModal .modal{max-width:500px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--g700);border-radius:4px}
+
+/* LANDING */
+#s-landing{align-items:center;justify-content:center;padding:2rem;text-align:center}
+.landing-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(34,204,112,.08),transparent 70%);top:50%;left:50%;transform:translate(-50%,-55%);pointer-events:none}
+.landing-content{position:relative;z-index:2;max-width:600px}
+.landing-headline{font-family:var(--font-display);font-size:clamp(3rem,8vw,5.5rem);font-weight:700;line-height:.95;letter-spacing:-.04em;margin-bottom:1.25rem;color:var(--text)}
+.landing-headline .hl{background:linear-gradient(135deg,var(--g300),var(--g500));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.landing-sub{font-size:1.05rem;color:var(--text2);font-weight:400;margin-bottom:3rem;line-height:1.6}
+.landing-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
+.landing-features{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem}
+.feature-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center}
+.feature-chip .icon{font-size:1.5rem;margin-bottom:.4rem}
+.feature-chip .label{font-size:.78rem;color:var(--text2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em}
+
+/* HOST SETUP */
+#s-host{flex-direction:column}
+.host-nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:rgba(4,15,8,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.host-body{flex:1;padding:2rem 1.5rem;max-width:860px;margin:0 auto;width:100%}
+.steps{display:flex;align-items:center;gap:0;margin-bottom:2rem}
+.step-item{display:flex;align-items:center;gap:8px;flex:1}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.78rem;font-weight:700;color:var(--text3);flex-shrink:0;transition:all .3s}
+.step-num.active{background:var(--accent);border-color:var(--accent);color:var(--bg);box-shadow:0 0 16px rgba(34,204,112,.4)}
+.step-num.done{background:var(--g700);border-color:var(--accent);color:var(--accent)}
+.step-label{font-size:.78rem;color:var(--text3);font-weight:500;white-space:nowrap}
+.step-label.active{color:var(--text)}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 12px;border-radius:1px;transition:background .3s}
+.step-line.done{background:var(--accent)}
+.step-panel{display:none;animation:screenIn .35s}
+.step-panel.active{display:block}
+.page-h{margin-bottom:1.75rem}
+.page-h h2{font-size:1.75rem;font-weight:700;margin-bottom:.3rem}
+.page-h p{color:var(--text2);font-size:.9rem}
+.q-editor-list{display:flex;flex-direction:column;gap:1rem}
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .2s}
+.q-card:hover{border-color:var(--border2)}
+.q-card-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;background:rgba(34,204,112,.04);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.q-card-head-left{display:flex;align-items:center;gap:10px}
+.q-num-badge{font-family:var(--font-mono);font-size:.7rem;font-weight:700;background:rgba(34,204,112,.15);color:var(--accent);border:1px solid rgba(34,204,112,.3);border-radius:6px;padding:3px 8px}
+.q-preview-text{font-size:.88rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px}
+.q-card-body{padding:1.25rem}
+.q-card.collapsed .q-card-body{display:none}
+.options-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt-row{display:flex;align-items:center;gap:8px}
+.opt-letter-badge{width:30px;height:30px;border-radius:8px;background:rgba(34,204,112,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.75rem;font-weight:700;color:var(--text3);flex-shrink:0;transition:all .2s}
+.opt-row.is-correct .opt-letter-badge{background:rgba(34,204,112,.2);border-color:var(--accent);color:var(--accent)}
+.correct-radio{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+
+/* QR SCREEN */
+#s-qr{align-items:center;justify-content:center;padding:2rem}
+.qr-wrapper{display:inline-block;padding:1.5rem;background:white;border-radius:var(--radius-lg);box-shadow:0 0 0 3px var(--border2),0 0 60px var(--glow),var(--shadow-card);margin:1.5rem 0;position:relative}
+.session-pill{display:inline-flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:100px;padding:.6rem 1.4rem;margin:.5rem 0 1.5rem}
+.session-pill .code{font-family:var(--font-mono);font-size:1.3rem;font-weight:700;color:var(--accent);letter-spacing:.15em}
+.session-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* LOBBY */
+#s-lobby{flex-direction:column}
+.lobby-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(4,15,8,.9);backdrop-filter:blur(12px);flex-wrap:wrap;gap:1rem}
+.lobby-body{flex:1;padding:2rem 1.5rem;max-width:900px;margin:0 auto;width:100%}
+.live-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:blink 1s infinite;box-shadow:0 0 8px var(--accent);flex-shrink:0}
+.players-mosaic{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:2rem;min-height:100px}
+.player-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem .75rem;text-align:center;animation:tileIn .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tileIn{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.ptile-avatar{width:52px;height:52px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:2px solid}
+.ptile-name{font-size:.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* JOIN */
+#s-join{align-items:center;justify-content:center;padding:2rem}
+.join-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:2.5rem;max-width:400px;width:100%;box-shadow:var(--shadow-glow),var(--shadow-card);text-align:center;position:relative;z-index:2}
+.join-icon{font-size:3rem;margin-bottom:1rem}
+.join-title{font-size:1.6rem;font-weight:700;margin-bottom:.4rem}
+.join-sub{color:var(--text2);font-size:.88rem;margin-bottom:2rem;line-height:1.5}
+
+/* PARTICIPANT WAIT */
+#s-pwait{align-items:center;justify-content:center;padding:2rem;text-align:center}
+.pwait-inner{max-width:400px;width:100%;position:relative;z-index:2}
+.pwait-pulse-ring{width:100px;height:100px;border-radius:50%;border:3px solid rgba(34,204,112,.3);margin:0 auto 2rem;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;animation:ringPulse 2s ease-in-out infinite}
+.pwait-pulse-ring::before{content:'';position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(34,204,112,.15);animation:ringPulse 2s ease-in-out infinite .3s}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.7}}
+.pwait-name{font-size:1.8rem;font-weight:700;margin-bottom:.5rem}
+.pwait-status{color:var(--text2);font-size:.9rem;margin-bottom:2rem}
+
+/* QUIZ */
+#s-quiz{flex-direction:column;min-height:100vh}
+.quiz-bar{display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:rgba(4,15,8,.95);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100}
+.quiz-progress{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--g400),var(--g300));border-radius:3px;transition:width .5s ease;box-shadow:0 0 10px var(--accent)}
+.q-label{font-family:var(--font-mono);font-size:.75rem;color:var(--text3);white-space:nowrap}
+.timer-wrap{position:relative;width:52px;height:52px;flex-shrink:0}
+.timer-wrap svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.timer-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:4}
+.timer-fg{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .5s}
+.timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--text)}
+.quiz-main{flex:1;display:flex;flex-direction:column;align-items:center;padding:2rem 1.5rem 6rem;max-width:780px;margin:0 auto;width:100%}
+.q-category{margin-bottom:1.25rem}
+.q-text{font-size:clamp(1.2rem,3.5vw,1.9rem);font-weight:600;font-family:var(--font-display);text-align:center;line-height:1.3;letter-spacing:-.02em;margin-bottom:2.5rem;color:var(--text)}
+.q-options{display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%}
+.opt-btn{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);text-align:left;position:relative;overflow:hidden}
+.opt-btn:hover:not(:disabled):not(.locked){border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 24px rgba(34,204,112,.2)}
+.opt-btn:disabled,.opt-btn.locked{cursor:default}
+.opt-key{width:38px;height:38px;border-radius:10px;background:rgba(34,204,112,.08);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:.82rem;color:var(--text3);flex-shrink:0;transition:all .2s}
+.opt-text{font-size:.95rem;font-weight:500;color:var(--text);line-height:1.4}
+.opt-btn.selected{border-color:var(--accent);background:rgba(34,204,112,.1)}
+.opt-btn.selected .opt-key{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.opt-btn.reveal-correct{border-color:var(--g300)!important;background:rgba(34,204,112,.15)!important;animation:correctFlash .4s}
+.opt-btn.reveal-correct .opt-key{background:var(--accent);color:var(--bg)}
+@keyframes correctFlash{0%,100%{box-shadow:0 0 0 0 rgba(34,204,112,0)}50%{box-shadow:0 0 30px rgba(34,204,112,.5)}}
+.opt-btn.reveal-wrong{border-color:rgba(229,83,75,.5)!important;background:rgba(229,83,75,.08)!important;opacity:.65}
+.opt-btn.reveal-wrong .opt-key{background:var(--danger);color:white}
+.answer-meter{width:100%;margin-top:2rem}
+.answer-meter-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.answer-meter-fill{height:100%;background:linear-gradient(90deg,var(--g600),var(--g300));border-radius:3px;transition:width .5s ease}
+.answer-meter-label{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);text-align:right}
+.host-dock{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:rgba(4,20,10,.95);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:100px;padding:.75rem 1.25rem;display:flex;align-items:center;gap:1rem;z-index:500;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 20px rgba(34,204,112,.1)}
+.host-dock-label{font-family:var(--font-mono);font-size:.65rem;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;border-right:1px solid var(--border);padding-right:1rem}
+.p-answered-msg{display:none;position:fixed;inset:0;z-index:400;background:rgba(2,20,10,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:1rem;text-align:center;padding:2rem}
+.p-answered-msg.show{display:flex}
+.p-answered-icon{font-size:4rem;animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bounceIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* REVEAL MODAL */
+.correct-pill{background:rgba(34,204,112,.12);border:2px solid rgba(34,204,112,.4);border-radius:var(--radius-lg);padding:1.25rem 1.75rem;margin:1rem 0 1.5rem}
+.correct-pill-label{font-family:var(--font-mono);font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.correct-pill-answer{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--accent)}
+.rscore-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);animation:slideLeft .3s both}
+@keyframes slideLeft{from{transform:translateX(-20px);opacity:0}to{transform:none;opacity:1}}
+.rscore-rank{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);width:20px}
+.rscore-name{flex:1;font-size:.9rem;font-weight:500;color:var(--text)}
+.rscore-round{font-size:.78rem;color:var(--g300);font-family:var(--font-mono)}
+.rscore-total{font-family:var(--font-mono);font-size:.9rem;font-weight:700;color:var(--accent)}
+
+/* SCOREBOARD */
+#s-scoreboard{align-items:center;justify-content:flex-start;padding:2rem 1.5rem}
+.sb-inner{max-width:640px;width:100%;margin:0 auto;position:relative;z-index:2}
+.sb-header{text-align:center;margin-bottom:2.5rem}
+.sb-trophy{font-size:4rem;margin-bottom:1rem}
+.sb-title{font-size:2.5rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.4rem}
+.sb-sub{color:var(--text2);font-size:.9rem}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:1rem;margin-bottom:2.5rem;padding:0 1rem}
+.podium-slot{flex:1;max-width:180px;text-align:center}
+.podium-name{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podium-score{font-family:var(--font-mono);font-size:.88rem;color:var(--accent);margin-bottom:8px}
+.podium-block{border-radius:var(--radius-sm) var(--radius-sm) 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1rem;font-family:var(--font-display);font-size:1.5rem;font-weight:700}
+.podium-slot.p1 .podium-block{background:linear-gradient(180deg,rgba(232,180,28,.3),rgba(232,180,28,.1));height:120px;color:#e8c41c;border:1px solid rgba(232,180,28,.3)}
+.podium-slot.p2 .podium-block{background:linear-gradient(180deg,rgba(180,180,180,.2),rgba(180,180,180,.05));height:90px;color:#b4b4b4;border:1px solid rgba(180,180,180,.2)}
+.podium-slot.p3 .podium-block{background:linear-gradient(180deg,rgba(186,130,80,.2),rgba(186,130,80,.05));height:70px;color:#ba8250;border:1px solid rgba(186,130,80,.2)}
+.sb-list{display:flex;flex-direction:column;gap:8px}
+.sb-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;animation:slideLeft .4s both;transition:border-color .2s}
+.sb-row:hover{border-color:var(--border2)}
+.sb-pos{font-family:var(--font-mono);font-size:.78rem;color:var(--text3);width:24px;text-align:center}
+.sb-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.sb-name{flex:1;font-weight:600;font-size:.95rem}
+.sb-bar-wrap{width:80px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.sb-bar-fill{height:100%;background:linear-gradient(90deg,var(--g600),var(--g300));border-radius:2px}
+.sb-score{font-family:var(--font-mono);font-size:.95rem;font-weight:700;color:var(--accent);width:70px;text-align:right}
+.sb-actions{display:flex;gap:1rem;justify-content:center;margin-top:2.5rem;flex-wrap:wrap}
+
+/* ADMIN */
+#s-admin{flex-direction:column}
+.admin-body{flex:1;padding:2rem 1.5rem;max-width:900px;margin:0 auto;width:100%}
+.admin-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px;margin-bottom:2rem}
+.admin-tab{flex:1;padding:9px 16px;background:none;border:none;border-radius:calc(var(--radius) - 4px);cursor:pointer;font-family:var(--font-body);font-size:.85rem;font-weight:600;color:var(--text3);transition:all .2s}
+.admin-tab.active{background:rgba(34,204,112,.15);color:var(--accent);border:1px solid rgba(34,204,112,.25)}
+.admin-panel{display:none;animation:screenIn .3s}
+.admin-panel.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center}
+.stat-val{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+.stat-lbl{font-family:var(--font-mono);font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;padding:10px 14px;font-family:var(--font-mono);font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border)}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:.88rem;color:var(--text);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+
+/* QR SCANNER */
+#s-scan{align-items:center;justify-content:center;padding:2rem}
+.scan-viewport{width:100%;max-width:340px;margin:1.5rem auto;border-radius:var(--radius-lg);overflow:hidden;position:relative;border:2px solid var(--border2);box-shadow:0 0 40px var(--glow)}
+.scan-line{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanMove 2s linear infinite;z-index:9;box-shadow:0 0 10px var(--accent)}
+@keyframes scanMove{0%{top:0}100%{top:100%}}
+#reader{width:100%!important}
+#reader video{width:100%!important;height:auto!important;display:block}
+#reader img{display:none!important}
+
+/* CONFETTI */
+.confetti-bit{position:fixed;pointer-events:none;z-index:9998;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+.section-title{font-family:var(--font-mono);font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.empty-state{text-align:center;padding:3rem 2rem;color:var(--text3)}
+.empty-state .icon{font-size:2.5rem;margin-bottom:.75rem}
+
+/* HELPERS */
+.text-accent{color:var(--accent)}.text-muted{color:var(--text2)}.text-center{text-align:center}
+.mt-2{margin-top:1rem}.mt-3{margin-top:1.5rem}.mb-2{margin-bottom:1rem}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+
+/* DB STATUS */
+.db-status{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
+.db-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.db-dot.connected{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2s infinite}
+.db-dot.disconnected{background:var(--danger)}
+.db-dot.checking{background:var(--warn);animation:blink .8s infinite}
+
+@media(max-width:600px){.q-options{grid-template-columns:1fr}.options-grid2{grid-template-columns:1fr}.landing-features{grid-template-columns:1fr 1fr}.host-dock{bottom:.75rem;gap:.6rem;padding:.6rem 1rem;border-radius:16px}.podium{gap:.5rem}}
+</style>
+</head>
+<body>
+
+<div id="toasts"></div>
+
+<!-- SUPABASE SETUP MODAL -->
+<div class="modal-backdrop open" id="setupModal">
+  <div class="modal" style="max-width:520px;">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:2.5rem;margin-bottom:.75rem;">🔗</div>
+      <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem;">Connect to Supabase</h2>
+      <p style="color:var(--text2);font-size:.88rem;line-height:1.6;">Enter your Supabase project credentials to enable real-time multiplayer quizzes. This allows players to join from any device by scanning the QR code.</p>
+    </div>
+
+    <div style="background:rgba(34,204,112,.06);border:1px solid rgba(34,204,112,.2);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem;font-size:.82rem;color:var(--text2);line-height:1.6;">
+      <strong style="color:var(--accent);">Setup Instructions:</strong><br>
+      1. Go to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">supabase.com</a> → New Project<br>
+      2. Copy your <strong style="color:var(--text);">Project URL</strong> and <strong style="color:var(--text);">anon key</strong> from Settings → API<br>
+      3. Run the SQL schema below in your SQL Editor<br>
+      4. Paste credentials here and click Connect
+    </div>
+
+    <details style="margin-bottom:1.5rem;">
+      <summary style="cursor:pointer;font-family:var(--font-mono);font-size:.75rem;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;padding:.5rem 0;">▶ SQL Schema (copy & run in Supabase)</summary>
+      <pre style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;font-size:.72rem;color:var(--text2);overflow-x:auto;margin-top:.75rem;line-height:1.5;">
+create table if not exists sessions (
+  id uuid default gen_random_uuid() primary key,
+  code text unique not null,
+  title text not null,
+  description text,
+  time_per_q int default 30,
+  max_pts int default 1000,
+  category text default 'General',
+  status text default 'waiting',
+  current_q int default -1,
+  created_at timestamptz default now()
+);
+
+create table if not exists questions (
+  id uuid default gen_random_uuid() primary key,
+  session_id uuid references sessions(id) on delete cascade,
+  idx int not null,
+  text text not null,
+  options jsonb not null,
+  correct int not null,
+  time_override int
+);
+
+create table if not exists players (
+  id uuid default gen_random_uuid() primary key,
+  session_id uuid references sessions(id) on delete cascade,
+  name text not null,
+  emoji text,
+  color text,
+  score int default 0,
+  round_pts int default 0,
+  answered bool default false,
+  created_at timestamptz default now()
+);
+
+create table if not exists answers (
+  id uuid default gen_random_uuid() primary key,
+  session_id uuid references sessions(id) on delete cascade,
+  player_id uuid references players(id) on delete cascade,
+  question_idx int not null,
+  option_idx int not null,
+  pts int default 0,
+  created_at timestamptz default now(),
+  unique(session_id, player_id, question_idx)
+);
+
+-- Enable realtime
+alter publication supabase_realtime add table sessions;
+alter publication supabase_realtime add table players;
+alter publication supabase_realtime add table answers;
+
+-- RLS (permissive for demo)
+alter table sessions enable row level security;
+alter table questions enable row level security;
+alter table players enable row level security;
+alter table answers enable row level security;
+create policy "public_all_sessions" on sessions for all using (true) with check (true);
+create policy "public_all_questions" on questions for all using (true) with check (true);
+create policy "public_all_players" on players for all using (true) with check (true);
+create policy "public_all_answers" on answers for all using (true) with check (true);
+      </pre>
+    </details>
+
+    <div class="form-group">
+      <label class="field-label">Supabase Project URL</label>
+      <input type="text" id="sbUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" />
+    </div>
+    <div class="form-group">
+      <label class="field-label">Supabase Anon Key</label>
+      <input type="password" id="sbKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+    </div>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <button class="btn btn-primary" style="flex:1;" onclick="connectSupabase()">🔗 Connect & Save</button>
+      <button class="btn btn-ghost" onclick="dismissSetup()">Skip (Demo Mode)</button>
+    </div>
+    <p style="font-size:.75rem;color:var(--text3);text-align:center;margin-top:.75rem;">Credentials are saved in localStorage on this device only.</p>
+  </div>
+</div>
+
+<!-- REVEAL MODAL -->
+<div class="modal-backdrop" id="revealModal">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:2.5rem;margin-bottom:.5rem;">✅</div>
+      <h2 style="font-size:1.5rem;font-weight:700;">Answer Revealed</h2>
+      <p style="color:var(--text2);font-size:.88rem;margin-top:4px;" id="revealQText"></p>
+    </div>
+    <div class="correct-pill">
+      <div class="correct-pill-label">✓ Correct Answer</div>
+      <div class="correct-pill-answer" id="revealAnswerText"></div>
+    </div>
+    <div class="section-title">Round Scores</div>
+    <div id="revealScores"></div>
+    <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeReveal()">Close</button>
+      <button class="btn btn-primary" style="flex:1;" id="revealNextBtn" onclick="hostNextQuestion()">Next Question →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LANDING -->
+<div class="screen active" id="s-landing">
+  <div class="landing-glow"></div>
+  <div class="landing-content">
+    <div class="logo-mark" style="justify-content:center;margin-bottom:2.5rem;">
+      <div class="logo-hex">⬡</div>
+      <span class="logo-text">Union of Genius</span>
+    </div>
+    <h1 class="landing-headline">Live Quizzes<br>that reward<br><span class="hl">speed &amp; wit</span></h1>
+    <p class="landing-sub">Host interactive quizzes with real-time scoring.<br>Scan a QR code, compete, and crown a champion.</p>
+    <div class="landing-actions">
+      <button class="btn btn-primary btn-lg" onclick="navigate('s-host')">⚡ Host a Quiz</button>
+      <button class="btn btn-secondary btn-lg" onclick="navigate('s-scan')">📷 Scan to Join</button>
+      <button class="btn btn-ghost" onclick="navigate('s-join')">🔑 Enter Code</button>
+    </div>
+    <div class="landing-features">
+      <div class="feature-chip"><div class="icon">⚡</div><div class="label">Speed Scoring</div></div>
+      <div class="feature-chip"><div class="icon">📱</div><div class="label">QR Join</div></div>
+      <div class="feature-chip"><div class="icon">🏆</div><div class="label">Live Rankings</div></div>
+    </div>
+    <div style="margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="navigate('s-admin')">🔐 Admin Panel</button>
+      <div class="db-status" id="dbStatusBadge">
+        <div class="db-dot checking" id="dbDot"></div>
+        <span id="dbStatusText">Checking DB…</span>
+      </div>
+      <button class="btn btn-ghost btn-xs" onclick="document.getElementById('setupModal').classList.add('open')">⚙ DB Setup</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOST SETUP -->
+<div class="screen" id="s-host">
+  <nav class="host-nav">
+    <div class="logo-mark"><div class="logo-hex">⬡</div><span class="logo-text">Union of Genius</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="navigate('s-landing')">← Back</button>
+  </nav>
+  <div class="host-body">
+    <div class="steps" id="steps">
+      <div class="step-item"><div class="step-num active" id="snum-1">1</div><span class="step-label active" id="slbl-1">Quiz Info</span></div>
+      <div class="step-line" id="sline-1"></div>
+      <div class="step-item"><div class="step-num" id="snum-2">2</div><span class="step-label" id="slbl-2">Questions</span></div>
+      <div class="step-line" id="sline-2"></div>
+      <div class="step-item"><div class="step-num" id="snum-3">3</div><span class="step-label" id="slbl-3">Launch</span></div>
+    </div>
+    <div class="step-panel active" id="sp-1">
+      <div class="page-h"><h2>Quiz Details</h2><p>Give your quiz a name and set the rules.</p></div>
+      <div class="card">
+        <div class="form-group"><label class="field-label">Quiz Title *</label><input type="text" id="quizTitle" placeholder="e.g. Tech Trivia Night" maxlength="60"/></div>
+        <div class="form-group"><label class="field-label">Description</label><textarea id="quizDesc" placeholder="What's this quiz about?"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+          <div class="form-group"><label class="field-label">Seconds / Question</label><input type="number" id="quizTime" value="30" min="5" max="120"/></div>
+          <div class="form-group"><label class="field-label">Max Points</label><input type="number" id="quizPoints" value="1000" min="100" step="100"/></div>
+          <div class="form-group"><label class="field-label">Category</label>
+            <select id="quizCat"><option>General Knowledge</option><option>Science &amp; Tech</option><option>History</option><option>Sports</option><option>Business</option><option>Entertainment</option><option>Geography</option><option>Custom</option></select>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block mt-3" onclick="goStep(2)">Continue to Questions →</button>
+    </div>
+
+    <div class="step-panel" id="sp-2">
+      <div class="page-h" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div><h2>Build Your Questions</h2><p>Add as many questions as you like.</p></div>
+        <button class="btn btn-primary" onclick="addQuestion()">+ Add Question</button>
+      </div>
+      <div id="qEditorList" class="q-editor-list"></div>
+      <div id="qEmptyState" class="empty-state card" style="display:none;"><div class="icon">❓</div><p>No questions yet.</p></div>
+      <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="validateAndGoStep3()">Review &amp; Launch →</button>
+      </div>
+    </div>
+
+    <div class="step-panel" id="sp-3">
+      <div class="page-h"><h2>Ready to Launch</h2><p>Review your quiz and go live.</p></div>
+      <div class="card mb-2" id="launchSummary"></div>
+      <div class="card" id="launchQList"></div>
+      <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Edit</button>
+        <button class="btn btn-primary btn-lg" style="flex:1;" id="launchBtn" onclick="launchQuiz()">🚀 Go Live — Generate QR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR SCREEN -->
+<div class="screen" id="s-qr">
+  <div style="margin:auto;padding:2rem;text-align:center;max-width:440px;width:100%;position:relative;z-index:2;">
+    <div class="logo-mark" style="justify-content:center;margin-bottom:1rem;"><div class="logo-hex">⬡</div><span class="logo-text">Union of Genius</span></div>
+    <h2 style="font-size:2rem;font-weight:700;margin-bottom:.4rem;">Scan to Join</h2>
+    <p style="color:var(--text2);font-size:.9rem;margin-bottom:.5rem;" id="qrQuizName">—</p>
+    <div class="qr-wrapper"><div id="qr-canvas"></div></div>
+    <div class="session-pill"><span class="dot"></span><span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text3);margin-right:4px;">CODE</span><span class="code" id="qrCodeDisplay">—</span></div>
+    <p style="color:var(--text3);font-size:.78rem;margin-bottom:1.5rem;">Players scan the QR or visit this URL and enter the code manually.</p>
+    <div style="background:rgba(34,204,112,.06);border:1px solid rgba(34,204,112,.2);border-radius:var(--radius-sm);padding:.75rem;margin-bottom:1.5rem;font-size:.78rem;color:var(--text2);word-break:break-all;" id="qrJoinUrl"></div>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="navigate('s-lobby')">Open Lobby →</button>
+      <button class="btn btn-secondary" onclick="copyLink()">📋 Copy Link</button>
+      <button class="btn btn-ghost btn-sm" onclick="navigate('s-landing')">Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCAN -->
+<div class="screen" id="s-scan">
+  <div style="margin:auto;position:relative;z-index:2;padding:2rem;max-width:420px;width:100%;text-align:center;">
+    <div class="logo-mark" style="justify-content:center;margin-bottom:1.5rem;"><div class="logo-hex">⬡</div><span class="logo-text">Union of Genius</span></div>
+    <h2 style="font-size:1.6rem;font-weight:700;margin-bottom:.4rem;">Scan QR Code</h2>
+    <p style="color:var(--text2);font-size:.88rem;margin-bottom:1.5rem;">Point your camera at the host's QR code.</p>
+    <div class="scan-viewport"><div class="scan-line"></div><div id="reader"></div></div>
+    <p style="color:var(--text3);font-size:.8rem;margin:1rem 0;">— or enter code manually —</p>
+    <div class="form-group">
+      <label class="field-label">Session Code</label>
+      <input type="text" id="scanCodeInput" placeholder="GENIUS-XXXX" style="text-transform:uppercase;font-family:var(--font-mono);letter-spacing:.12em;text-align:center;" oninput="this.value=this.value.toUpperCase()"/>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="proceedWithCode(document.getElementById('scanCodeInput').value)">Join with Code →</button>
+    <button class="btn btn-ghost btn-block mt-2" onclick="stopScan();navigate('s-landing')">← Back</button>
+  </div>
+</div>
+
+<!-- JOIN (name entry) -->
+<div class="screen" id="s-join">
+  <div style="margin:auto;padding:2rem;position:relative;z-index:2;">
+    <div class="join-card">
+      <div class="join-icon">🎮</div>
+      <h2 class="join-title" id="joinQuizTitle">Join the Quiz</h2>
+      <p class="join-sub" id="joinQuizSub">Enter your name to join the live session.</p>
+      <div class="form-group" id="joinCodeGroup">
+        <label class="field-label">Session Code</label>
+        <input type="text" id="joinCode" placeholder="GENIUS-XXXX" style="text-transform:uppercase;font-family:var(--font-mono);letter-spacing:.12em;text-align:center;" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="form-group">
+        <label class="field-label">Your Name</label>
+        <input type="text" id="joinName" placeholder="Enter your name" maxlength="24"/>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="joinQuiz()">Let's Go! 🚀</button>
+      <button class="btn btn-ghost btn-block mt-2 btn-sm" onclick="navigate('s-landing')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- PARTICIPANT WAIT -->
+<div class="screen" id="s-pwait">
+  <div class="pwait-inner" style="margin:auto;">
+    <div class="pwait-pulse-ring">🎮</div>
+    <h2 class="pwait-name" id="pwaitName">Welcome!</h2>
+    <p class="pwait-status" id="pwaitStatus">Waiting for the host to start…</p>
+    <div class="badge badge-green" id="pwaitCode" style="font-size:.85rem;padding:8px 20px;">SESSION ACTIVE</div>
+    <div style="margin-top:2.5rem;padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);">
+      <p style="font-size:.82rem;color:var(--text3);text-align:center;margin-bottom:.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;">Players Joined</p>
+      <div id="pwaitPlayers" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOBBY -->
+<div class="screen" id="s-lobby">
+  <div class="lobby-header">
+    <div>
+      <div class="logo-text" style="font-size:.8rem;margin-bottom:2px;">⬡ Union of Genius</div>
+      <h2 style="font-size:1.25rem;font-weight:700;" id="lobbyTitle">Quiz Lobby</h2>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <div class="session-pill" style="padding:.4rem 1rem;"><span class="dot"></span><span class="code" id="lobbyCode" style="font-size:1rem;">—</span></div>
+      <button class="btn btn-secondary btn-sm" onclick="navigate('s-qr')">📱 QR Code</button>
+    </div>
+  </div>
+  <div class="lobby-body">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;">
+      <div class="live-dot"></div>
+      <span style="font-family:var(--font-mono);font-size:.82rem;color:var(--text2);"><span id="playerCount">0</span> players in lobby</span>
+    </div>
+    <div class="section-title">Participants</div>
+    <div class="players-mosaic" id="lobbyPlayers">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text3);"><div style="font-size:2rem;margin-bottom:.5rem;">👀</div><p>Waiting for players to scan the QR…</p></div>
+    </div>
+    <div style="text-align:center;padding-top:1rem;border-top:1px solid var(--border);">
+      <p style="color:var(--text3);font-size:.82rem;margin-bottom:1rem;">Start the quiz when everyone has joined.</p>
+      <button class="btn btn-primary btn-lg" onclick="startQuiz()" id="startBtn">Start Quiz ⚡</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="s-quiz">
+  <div class="quiz-bar">
+    <div class="timer-wrap">
+      <svg viewBox="0 0 52 52" width="52" height="52">
+        <circle class="timer-bg" cx="26" cy="26" r="22"/>
+        <circle class="timer-fg" id="timerArc" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="0" stroke="var(--accent)"/>
+      </svg>
+      <div class="timer-num" id="timerNum">30</div>
+    </div>
+    <div class="quiz-progress"><div class="quiz-progress-fill" id="qProgress"></div></div>
+    <span class="q-label" id="qCounter">Q 1/5</span>
+    <button class="btn btn-ghost btn-xs" onclick="toggleLiveboard()">📊</button>
+  </div>
+  <div class="quiz-main">
+    <div class="q-category"><span class="badge badge-green" id="qCatBadge">General</span></div>
+    <p class="q-text" id="qText">Loading…</p>
+    <div class="q-options" id="qOptions"></div>
+    <div class="answer-meter" id="answerMeter">
+      <div class="answer-meter-bar"><div class="answer-meter-fill" id="answerFill" style="width:0%"></div></div>
+      <div class="answer-meter-label" id="answerLabel">0 answered</div>
+    </div>
+  </div>
+  <div class="host-dock" id="hostDock" style="display:none;">
+    <span class="host-dock-label">HOST</span>
+    <button class="btn btn-secondary btn-sm" id="revealBtn" onclick="revealAnswer()" disabled>🔍 Reveal</button>
+    <button class="btn btn-primary btn-sm" id="nextBtn" onclick="hostNextQuestion()" disabled>Next →</button>
+    <button class="btn btn-warn btn-sm" onclick="endQuizEarly()">End Quiz</button>
+  </div>
+  <div class="p-answered-msg" id="pAnsweredMsg">
+    <div class="p-answered-icon" id="pAnsweredIcon">✅</div>
+    <h3 style="font-size:1.4rem;font-weight:700;" id="pAnsweredTitle">Answer submitted!</h3>
+    <p style="color:var(--text2);" id="pAnsweredSub">Waiting for others…</p>
+  </div>
+  <div id="liveboard" style="display:none;position:fixed;right:1rem;top:80px;width:210px;background:rgba(4,20,10,.95);backdrop-filter:blur(16px);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1rem;z-index:200;">
+    <div style="font-family:var(--font-mono);font-size:.68rem;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">🏆 Live Scores</div>
+    <div id="liveboardList"></div>
+  </div>
+</div>
+
+<!-- SCOREBOARD -->
+<div class="screen" id="s-scoreboard">
+  <div class="sb-inner" style="padding-top:3rem;">
+    <div class="sb-header">
+      <div class="sb-trophy">🏆</div>
+      <h1 class="sb-title">Final Results</h1>
+      <p class="sb-sub" id="sbQuizName">—</p>
+    </div>
+    <div class="podium" id="podium"></div>
+    <div class="section-title">All Participants</div>
+    <div class="sb-list" id="sbList"></div>
+    <div class="sb-actions">
+      <button class="btn btn-secondary" onclick="exportResults()">📥 Export Results</button>
+      <button class="btn btn-primary btn-lg" onclick="navigate('s-landing')">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="screen" id="s-admin">
+  <nav class="host-nav">
+    <div class="logo-mark"><div class="logo-hex">⬡</div><span class="logo-text">Admin Console</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="navigate('s-landing')">← Exit</button>
+  </nav>
+  <div class="admin-body">
+    <div id="adminGate" style="max-width:360px;margin:4rem auto;text-align:center;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🔐</div>
+      <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem;">Admin Access</h2>
+      <p style="color:var(--text2);margin-bottom:2rem;font-size:.88rem;">Password: <span class="mono" style="color:var(--accent);">admin123</span></p>
+      <div class="form-group"><input type="password" id="adminPass" placeholder="Enter password" onkeydown="if(event.key==='Enter')adminLogin()"/></div>
+      <button class="btn btn-primary btn-block" onclick="adminLogin()">Unlock →</button>
+    </div>
+    <div id="adminDash" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <h2 style="font-size:1.5rem;font-weight:700;">Dashboard</h2>
+        <button class="btn btn-primary btn-sm" onclick="navigate('s-host')">+ New Quiz</button>
+      </div>
+      <div class="stats-row" id="adminStats"></div>
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchAdminTab('sessions',this)">Sessions</button>
+        <button class="admin-tab" onclick="switchAdminTab('players',this)">Players</button>
+        <button class="admin-tab" onclick="switchAdminTab('settings',this)">Settings</button>
+      </div>
+      <div id="apanel-sessions" class="admin-panel active"><div id="adminSessionsList"></div></div>
+      <div id="apanel-players" class="admin-panel"><div id="adminPlayersList"></div></div>
+      <div id="apanel-settings" class="admin-panel">
+        <div class="card">
+          <div style="font-size:.88rem;color:var(--text2);margin-bottom:1.5rem;">Platform settings applied to new quizzes.</div>
+          <div class="form-group"><label class="field-label">Default Time Per Question</label><input type="number" value="30" id="setTime"/></div>
+          <div class="form-group"><label class="field-label">Default Max Points</label><input type="number" value="1000" id="setPts"/></div>
+          <button class="btn btn-primary" onclick="saveAdminSettings()">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SUPABASE CLIENT
+═══════════════════════════════════════════════════ */
+let sb = null;
+let sbConnected = false;
+let sessionChannel = null;
+let playersChannel = null;
+let answersChannel = null;
+
+function getSavedCreds() {
+  try { return JSON.parse(localStorage.getItem('uog_sb_creds') || 'null'); } catch(e) { return null; }
+}
+
+function saveCreds(url, key) {
+  localStorage.setItem('uog_sb_creds', JSON.stringify({ url, key }));
+}
+
+async function initSupabase(url, key) {
+  try {
+    sb = window.supabase.createClient(url, key, {
+      realtime: { params: { eventsPerSecond: 20 } }
+    });
+    // Test connection
+    const { error } = await sb.from('sessions').select('id').limit(1);
+    if (error && error.code !== 'PGRST116') throw error;
+    sbConnected = true;
+    updateDbStatus(true);
+    return true;
+  } catch(e) {
+    console.error('Supabase init error:', e);
+    sbConnected = false;
+    updateDbStatus(false);
+    return false;
+  }
+}
+
+function updateDbStatus(ok) {
+  const dot = document.getElementById('dbDot');
+  const txt = document.getElementById('dbStatusText');
+  if (!dot || !txt) return;
+  dot.className = 'db-dot ' + (ok ? 'connected' : 'disconnected');
+  txt.textContent = ok ? 'DB Connected' : 'Demo Mode';
+}
+
+async function connectSupabase() {
+  const url = document.getElementById('sbUrl').value.trim();
+  const key = document.getElementById('sbKey').value.trim();
+  if (!url || !key) { toast('Enter both URL and key!', 'error'); return; }
+
+  toast('Connecting…', 'info');
+  const ok = await initSupabase(url, key);
+  if (ok) {
+    saveCreds(url, key);
+    document.getElementById('setupModal').classList.remove('open');
+    toast('Supabase connected! Real-time multiplayer enabled.', 'success', 5000);
+  } else {
+    toast('Connection failed. Check your credentials and ensure the SQL schema was applied.', 'error', 6000);
+  }
+}
+
+function dismissSetup() {
+  document.getElementById('setupModal').classList.remove('open');
+  updateDbStatus(false);
+  toast('Running in demo mode — QR scanning works on same device only.', 'info', 5000);
+}
+
+// Auto-connect on load
+(async function autoConnect() {
+  const dot = document.getElementById('dbDot');
+  if (dot) dot.className = 'db-dot checking';
+  const creds = getSavedCreds();
+  if (creds?.url && creds?.key) {
+    const ok = await initSupabase(creds.url, creds.key);
+    if (ok) {
+      document.getElementById('setupModal').classList.remove('open');
+    }
+  } else {
+    // Show setup modal after brief delay
+    setTimeout(() => {
+      if (!sbConnected) {
+        updateDbStatus(false);
+      }
+    }, 500);
+  }
+})();
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+const APP = {
+  role: null,
+  currentScreen: 's-landing',
+  quiz: { title:'', description:'', timePerQ:30, maxPts:1000, category:'General Knowledge', questions:[] },
+  session: {
+    id: null, code: '', players: [],
+    currentQ: -1, started: false, finished: false,
+  },
+  me: null,
+  timerInterval: null,
+  timeLeft: 30,
+  questionAnswered: false,
+  answeredSet: new Set(),
+  qrScanner: null,
+  pendingCode: null,
+};
+
+const EMOJIS  = ['🦁','🦊','🐯','🦅','🐬','🦋','🐲','🦄','🐙','🦎','🦚','🐺','🦝','🦜','🐻','🦩'];
+const COLORS  = ['#22cc70','#2d9fa0','#e8b84b','#c0392b','#8e44ad','#2980b9','#e67e22','#1abc9c','#e91e63','#ff5722','#00bcd4','#9c27b0'];
+function rnd(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function makePlayer(name) {
+  return { id: 'local-'+Date.now()+Math.random(), name: name.trim().slice(0,24), emoji: rnd(EMOJIS), color: rnd(COLORS), score:0, roundPts:0, answered:false };
+}
+
+/* ═══════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════ */
+function navigate(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  APP.currentScreen = id;
+  if (id === 's-scan') setTimeout(startScan, 400);
+  else stopScan();
+  if (id === 's-lobby') refreshLobby();
+  if (id === 's-admin' && document.getElementById('adminDash').style.display !== 'none') refreshAdminDash();
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+function toast(msg, type='info', duration=3200) {
+  const icons = { success:'✅', error:'❌', warn:'⚠️', info:'💬' };
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span class="toast-icon">${icons[type]||'💬'}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, duration);
+}
+
+/* ═══════════════════════════════════════════════════
+   STEPS
+═══════════════════════════════════════════════════ */
+function goStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById(`sp-${i}`)?.classList.toggle('active', i===n);
+    const num = document.getElementById(`snum-${i}`);
+    const lbl = document.getElementById(`slbl-${i}`);
+    num.classList.toggle('active', i===n);
+    num.classList.toggle('done', i<n);
+    lbl.classList.toggle('active', i===n);
+    if (i < 3) document.getElementById(`sline-${i}`)?.classList.toggle('done', i<n);
+  });
+  if (n===2) renderQEditorEmpty();
+}
+
+/* ═══════════════════════════════════════════════════
+   QUESTION EDITOR
+═══════════════════════════════════════════════════ */
+let qIdCounter = 0;
+
+function addQuestion() {
+  qIdCounter++;
+  const id = qIdCounter;
+  document.getElementById('qEmptyState').style.display = 'none';
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.id = `qcard-${id}`;
+  card.dataset.qid = id;
+  card.innerHTML = `
+    <div class="q-card-head" onclick="toggleQCard(${id})">
+      <div class="q-card-head-left">
+        <span class="q-num-badge">Q?</span>
+        <span class="q-preview-text" id="qprev-${id}">New question…</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:.9rem;color:var(--text3);" id="qtoggle-${id}">▲</span>
+        <button class="btn btn-danger btn-xs" onclick="removeQuestion(event,${id})">✕ Remove</button>
+      </div>
+    </div>
+    <div class="q-card-body">
+      <div class="form-group">
+        <label class="field-label">Question *</label>
+        <input type="text" id="qtext-${id}" placeholder="Type your question here…" oninput="updateQPreview(${id})"/>
+      </div>
+      <div class="form-group">
+        <label class="field-label">Answer Options (select the correct one)</label>
+        <div class="options-grid2" id="opts-${id}">
+          ${['A','B','C','D'].map((l,i) => `
+            <div class="opt-row" id="optrow-${id}-${i}">
+              <div class="opt-letter-badge">${l}</div>
+              <input type="text" id="opt-${id}-${i}" placeholder="Option ${l}"/>
+              <input type="radio" class="correct-radio" name="correct-${id}" value="${i}" title="Mark as correct" onchange="markCorrectOpt(${id},${i})"/>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:.78rem;color:var(--text3);">⏱ Time override:</span>
+        <input type="number" id="qtime-${id}" placeholder="Default" min="5" max="120" style="width:100px;padding:6px 10px;font-size:.82rem;"/>
+        <span style="font-size:.75rem;color:var(--text3);">sec</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('qEditorList').appendChild(card);
+  renumberQuestions();
+  document.querySelector(`input[name="correct-${id}"][value="0"]`).checked = true;
+  markCorrectOpt(id, 0);
+}
+
+function renderQEditorEmpty() {
+  const list = document.getElementById('qEditorList');
+  document.getElementById('qEmptyState').style.display = list.children.length === 0 ? 'block' : 'none';
+}
+function toggleQCard(id) {
+  const card = document.getElementById(`qcard-${id}`);
+  card.classList.toggle('collapsed');
+  document.getElementById(`qtoggle-${id}`).textContent = card.classList.contains('collapsed') ? '▼' : '▲';
+}
+function removeQuestion(e, id) {
+  e.stopPropagation();
+  document.getElementById(`qcard-${id}`)?.remove();
+  renumberQuestions(); renderQEditorEmpty();
+}
+function renumberQuestions() {
+  document.querySelectorAll('.q-card').forEach((card, i) => {
+    const badge = card.querySelector('.q-num-badge');
+    if (badge) badge.textContent = `Q${i+1}`;
+  });
+}
+function updateQPreview(id) {
+  const val = document.getElementById(`qtext-${id}`)?.value || 'New question…';
+  const prev = document.getElementById(`qprev-${id}`);
+  if (prev) prev.textContent = val || 'New question…';
+}
+function markCorrectOpt(qid, idx) {
+  ['A','B','C','D'].forEach((l,i) => {
+    const row = document.getElementById(`optrow-${qid}-${i}`);
+    if (row) row.classList.toggle('is-correct', i===idx);
+  });
+}
+function collectQuestions() {
+  const qs = [];
+  document.querySelectorAll('.q-card').forEach(card => {
+    const id = card.dataset.qid;
+    const text = document.getElementById(`qtext-${id}`)?.value?.trim();
+    if (!text) return;
+    const opts = ['A','B','C','D'].map((_,i) => document.getElementById(`opt-${id}-${i}`)?.value?.trim()).filter(Boolean);
+    const correctRadio = card.querySelector(`input[name="correct-${id}"]:checked`);
+    const correct = correctRadio ? parseInt(correctRadio.value) : 0;
+    const timeOver = document.getElementById(`qtime-${id}`)?.value;
+    qs.push({ text, options: opts, correct: Math.min(correct, opts.length-1), timeOverride: timeOver ? parseInt(timeOver) : null });
+  });
+  return qs;
+}
+
+function validateAndGoStep3() {
+  const title = document.getElementById('quizTitle').value.trim();
+  if (!title) { toast('Please enter a quiz title!', 'error'); goStep(1); return; }
+  const qs = collectQuestions();
+  if (qs.length === 0) { toast('Add at least one question!', 'error'); return; }
+  if (qs.find(q => q.options.length < 2)) { toast('Each question needs at least 2 options.', 'error'); return; }
+  APP.quiz.title = title;
+  APP.quiz.description = document.getElementById('quizDesc').value.trim();
+  APP.quiz.timePerQ = parseInt(document.getElementById('quizTime').value) || 30;
+  APP.quiz.maxPts = parseInt(document.getElementById('quizPoints').value) || 1000;
+  APP.quiz.category = document.getElementById('quizCat').value;
+  APP.quiz.questions = qs;
+  renderLaunchPreview(); goStep(3);
+}
+
+function renderLaunchPreview() {
+  const q = APP.quiz;
+  document.getElementById('launchSummary').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;">
+      <div style="flex:1;"><div style="font-size:1.2rem;font-weight:700;margin-bottom:4px;">${q.title}</div><div style="color:var(--text2);font-size:.85rem;">${q.description||'No description'}</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span class="badge badge-green">${q.questions.length} questions</span>
+        <span class="badge badge-muted">${q.timePerQ}s each</span>
+        <span class="badge badge-muted">${q.maxPts} pts max</span>
+      </div>
+    </div>`;
+  document.getElementById('launchQList').innerHTML = `
+    <div class="section-title">Question Preview</div>
+    ${q.questions.map((qu,i) => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;">
+        <span class="q-num-badge" style="flex-shrink:0;margin-top:2px;">Q${i+1}</span>
+        <div>
+          <div style="font-weight:600;font-size:.9rem;margin-bottom:4px;">${qu.text}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${qu.options.map((o,oi) => `<span style="font-size:.78rem;padding:2px 8px;border-radius:6px;${oi===qu.correct?'background:rgba(34,204,112,.2);color:var(--accent);border:1px solid rgba(34,204,112,.3);':'background:var(--surface2);color:var(--text3);border:1px solid var(--border);'}">${String.fromCharCode(65+oi)}. ${o}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('')}`;
+}
+
+/* ═══════════════════════════════════════════════════
+   LAUNCH QUIZ
+═══════════════════════════════════════════════════ */
+async function launchQuiz() {
+  const btn = document.getElementById('launchBtn');
+  btn.disabled = true; btn.textContent = 'Launching…';
+  APP.role = 'host';
+
+  const code = 'GENIUS-' + Math.random().toString(36).substr(2,4).toUpperCase();
+  APP.session.code = code;
+  APP.session.players = [];
+  APP.session.currentQ = -1;
+  APP.session.started = false;
+  APP.session.finished = false;
+  APP.session.id = null;
+
+  if (sbConnected) {
+    try {
+      // Insert session
+      const { data: sess, error: sessErr } = await sb.from('sessions').insert({
+        code, title: APP.quiz.title, description: APP.quiz.description,
+        time_per_q: APP.quiz.timePerQ, max_pts: APP.quiz.maxPts,
+        category: APP.quiz.category, status: 'waiting', current_q: -1
+      }).select().single();
+      if (sessErr) throw sessErr;
+      APP.session.id = sess.id;
+
+      // Insert questions
+      const qRows = APP.quiz.questions.map((q, i) => ({
+        session_id: sess.id, idx: i, text: q.text,
+        options: q.options, correct: q.correct, time_override: q.timeOverride
+      }));
+      const { error: qErr } = await sb.from('questions').insert(qRows);
+      if (qErr) throw qErr;
+
+      // Subscribe to players joining
+      subscribeHostChannels(sess.id);
+
+      toast('Quiz saved to database!', 'success');
+    } catch(e) {
+      console.error('Launch error:', e);
+      toast('DB error: ' + e.message + ' — continuing in demo mode.', 'warn', 5000);
+    }
+  } else {
+    toast('Demo mode — QR joins work on same device only.', 'info', 4000);
+  }
+
+  // Generate QR
+  const joinUrl = buildJoinUrl(code);
+  document.getElementById('qrQuizName').textContent = APP.quiz.title;
+  document.getElementById('qrCodeDisplay').textContent = code;
+  document.getElementById('qrJoinUrl').textContent = joinUrl;
+
+  const qrDiv = document.getElementById('qr-canvas');
+  qrDiv.innerHTML = '';
+  new QRCode(qrDiv, { text: joinUrl, width: 220, height: 220, colorDark: '#021a0c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+
+  document.getElementById('lobbyTitle').textContent = APP.quiz.title;
+  document.getElementById('lobbyCode').textContent = code;
+
+  btn.disabled = false; btn.textContent = '🚀 Go Live — Generate QR';
+  navigate('s-qr');
+}
+
+function buildJoinUrl(code) {
+  const base = window.location.href.split('?')[0];
+  return base + '?join=' + encodeURIComponent(code);
+}
+
+function copyLink() {
+  const url = buildJoinUrl(APP.session.code);
+  navigator.clipboard.writeText(url).then(() => toast('Link copied!', 'success')).catch(() => toast('Code: ' + APP.session.code, 'info'));
+}
+
+/* ═══════════════════════════════════════════════════
+   HOST REALTIME SUBSCRIPTIONS
+═══════════════════════════════════════════════════ */
+function subscribeHostChannels(sessionId) {
+  // Listen for new players
+  playersChannel = sb.channel('host-players-' + sessionId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'players',
+      filter: `session_id=eq.${sessionId}`
+    }, payload => {
+      const p = dbPlayerToLocal(payload.new);
+      if (!APP.session.players.find(pl => pl.id === p.id)) {
+        APP.session.players.push(p);
+        refreshLobby();
+        toast(`${p.emoji} ${p.name} joined!`, 'success', 2000);
+      }
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'players',
+      filter: `session_id=eq.${sessionId}`
+    }, payload => {
+      const idx = APP.session.players.findIndex(p => p.id === payload.new.id);
+      if (idx >= 0) {
+        const p = dbPlayerToLocal(payload.new);
+        APP.session.players[idx] = { ...APP.session.players[idx], ...p };
+        updateAnswerMeter(); updateLiveboard();
+        if (p.answered && !APP.answeredSet.has(p.id)) {
+          APP.answeredSet.add(p.id);
+          checkAllAnswered();
+        }
+      }
+    })
+    .subscribe();
+}
+
+function subscribeParticipantChannels(sessionId) {
+  // Listen for session state changes (quiz start, question advance, end)
+  sessionChannel = sb.channel('p-session-' + sessionId)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'sessions',
+      filter: `id=eq.${sessionId}`
+    }, payload => {
+      const sess = payload.new;
+      if (sess.status === 'active' && !APP.session.started) {
+        APP.session.started = true;
+        APP.session.currentQ = sess.current_q;
+        loadQuestionParticipant(sess.current_q);
+      } else if (sess.status === 'active' && APP.session.started && sess.current_q !== APP.session.currentQ) {
+        APP.session.currentQ = sess.current_q;
+        APP.questionAnswered = false;
+        loadQuestionParticipant(sess.current_q);
+      } else if (sess.status === 'finished') {
+        APP.session.finished = true;
+        loadFinalScoresParticipant(sessionId);
+      }
+    })
+    .subscribe();
+
+  // Listen for other players joining (participant waiting room)
+  playersChannel = sb.channel('p-players-' + sessionId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'players',
+      filter: `session_id=eq.${sessionId}`
+    }, payload => {
+      const p = dbPlayerToLocal(payload.new);
+      if (!APP.session.players.find(pl => pl.id === p.id)) {
+        APP.session.players.push(p);
+        updatePwaitPlayers();
+      }
+    })
+    .subscribe();
+}
+
+function dbPlayerToLocal(row) {
+  return {
+    id: row.id, name: row.name, emoji: row.emoji || '🎮',
+    color: row.color || '#22cc70', score: row.score || 0,
+    roundPts: row.round_pts || 0, answered: row.answered || false
+  };
+}
+
+/* ═══════════════════════════════════════════════════
+   QR SCANNER
+═══════════════════════════════════════════════════ */
+function startScan() {
+  if (APP.qrScanner) return;
+  try {
+    APP.qrScanner = new Html5Qrcode('reader');
+    APP.qrScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 240, height: 240 } },
+      (decoded) => { stopScan(); handleQRResult(decoded); },
+      () => {}
+    ).catch(err => {
+      console.warn('Camera error:', err);
+      toast('Camera access denied. Enter code manually.', 'warn');
+    });
+  } catch(e) {
+    toast('QR Scanner not available. Enter code manually.', 'warn');
+  }
+}
+
+function stopScan() {
+  if (APP.qrScanner) {
+    APP.qrScanner.stop().then(() => { APP.qrScanner = null; }).catch(() => { APP.qrScanner = null; });
+  }
+}
+
+function handleQRResult(text) {
+  let code = text;
+  try {
+    const url = new URL(text);
+    const p = url.searchParams.get('join');
+    if (p) code = decodeURIComponent(p);
+  } catch(e) {}
+  proceedWithCode(code);
+}
+
+async function proceedWithCode(code) {
+  if (!code || code.length < 3) { toast('Invalid code.', 'error'); return; }
+  code = code.toUpperCase().trim();
+  APP.pendingCode = code;
+  stopScan();
+
+  if (sbConnected) {
+    // Look up session from DB
+    const { data: sess, error } = await sb.from('sessions').select('*').eq('code', code).single();
+    if (error || !sess) {
+      toast('Session not found: ' + code, 'error'); return;
+    }
+    if (sess.status === 'finished') { toast('This quiz has already ended.', 'error'); return; }
+
+    // Load quiz info from DB
+    APP.session.id = sess.id;
+    APP.session.code = sess.code;
+    APP.session.started = sess.status === 'active';
+    APP.session.currentQ = sess.current_q;
+
+    // Load questions
+    const { data: qrows } = await sb.from('questions').select('*').eq('session_id', sess.id).order('idx');
+    APP.quiz.title = sess.title;
+    APP.quiz.description = sess.description;
+    APP.quiz.timePerQ = sess.time_per_q;
+    APP.quiz.maxPts = sess.max_pts;
+    APP.quiz.category = sess.category;
+    APP.quiz.questions = (qrows || []).map(r => ({
+      text: r.text, options: r.options, correct: r.correct, timeOverride: r.time_override
+    }));
+
+    // Load existing players
+    const { data: prows } = await sb.from('players').select('*').eq('session_id', sess.id);
+    APP.session.players = (prows || []).map(dbPlayerToLocal);
+  } else {
+    // Demo mode: validate against local session
+    if (APP.session.code && code !== APP.session.code) {
+      toast('Session not found. Try: ' + APP.session.code, 'error'); return;
+    }
+    if (!APP.session.code) { toast('No active session found.', 'error'); return; }
+  }
+
+  document.getElementById('joinCode').value = code;
+  document.getElementById('joinCodeGroup').style.display = 'none';
+  document.getElementById('joinQuizTitle').textContent = APP.quiz.title || 'Join the Quiz';
+  document.getElementById('joinQuizSub').textContent = `Session: ${code} — Enter your name.`;
+  navigate('s-join');
+}
+
+/* ═══════════════════════════════════════════════════
+   JOIN PARTICIPANT
+═══════════════════════════════════════════════════ */
+async function joinQuiz() {
+  const code = (document.getElementById('joinCode').value || APP.pendingCode || '').toUpperCase().trim();
+  const name = document.getElementById('joinName').value.trim();
+  if (!code) { toast('Enter a session code!', 'error'); return; }
+  if (!name) { toast('Enter your name!', 'error'); return; }
+
+  APP.role = 'participant';
+
+  if (sbConnected && APP.session.id) {
+    // Check dupe
+    const { data: exists } = await sb.from('players').select('id').eq('session_id', APP.session.id).ilike('name', name).single();
+    if (exists) { toast('That name is taken!', 'error'); return; }
+
+    const emoji = rnd(EMOJIS);
+    const color = rnd(COLORS);
+
+    const { data: prow, error } = await sb.from('players').insert({
+      session_id: APP.session.id, name, emoji, color,
+      score: 0, round_pts: 0, answered: false
+    }).select().single();
+
+    if (error) { toast('Failed to join: ' + error.message, 'error'); return; }
+    APP.me = dbPlayerToLocal(prow);
+  } else {
+    // Demo mode
+    if (APP.session.started) { toast('Quiz already started!', 'error'); return; }
+    if (APP.session.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+      toast('Name taken!', 'error'); return;
+    }
+    const player = makePlayer(name);
+    APP.me = player;
+    APP.session.players.push(player);
+    refreshLobby();
+  }
+
+  document.getElementById('pwaitName').textContent = `Hey, ${APP.me.emoji} ${APP.me.name}!`;
+  document.getElementById('pwaitStatus').textContent = `You've joined "${APP.quiz.title}". Waiting for the host…`;
+  document.getElementById('pwaitCode').textContent = 'SESSION: ' + code;
+  updatePwaitPlayers();
+
+  // Subscribe to session changes
+  if (sbConnected && APP.session.id) {
+    subscribeParticipantChannels(APP.session.id);
+
+    // If quiz already started (joining mid-game), go straight to current question
+    if (APP.session.started && APP.session.currentQ >= 0) {
+      toast('Quiz is in progress — joining current question!', 'info', 3000);
+      setTimeout(() => loadQuestionParticipant(APP.session.currentQ), 1500);
+      navigate('s-quiz');
+      return;
+    }
+  }
+
+  navigate('s-pwait');
+  toast(`Joined! Welcome, ${APP.me.name}!`, 'success');
+}
+
+function updatePwaitPlayers() {
+  const c = document.getElementById('pwaitPlayers');
+  if (!c) return;
+  c.innerHTML = APP.session.players.map(p => `<span style="font-size:1.2rem;" title="${p.name}">${p.emoji}</span>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════
+   LOBBY (HOST)
+═══════════════════════════════════════════════════ */
+function refreshLobby() {
+  const grid = document.getElementById('lobbyPlayers');
+  const count = document.getElementById('playerCount');
+  if (!grid) return;
+  count.textContent = APP.session.players.length;
+  if (APP.session.players.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text3);"><div style="font-size:2rem;margin-bottom:.5rem;">👀</div><p>Waiting for players to scan the QR…</p></div>`;
+    return;
+  }
+  grid.innerHTML = APP.session.players.map(p => `
+    <div class="player-tile">
+      <div class="ptile-avatar" style="background:${p.color}22;border-color:${p.color}55;">${p.emoji}</div>
+      <div class="ptile-name">${p.name}</div>
+    </div>
+  `).join('');
+  updatePwaitPlayers();
+}
+
+/* ═══════════════════════════════════════════════════
+   START QUIZ (HOST)
+═══════════════════════════════════════════════════ */
+async function startQuiz() {
+  if (APP.session.players.length === 0) {
+    toast('Add some players first! Adding demo bots…', 'warn');
+    addBotPlayers(); return;
+  }
+  APP.session.started = true;
+  APP.session.currentQ = 0;
+
+  if (sbConnected && APP.session.id) {
+    await sb.from('sessions').update({ status: 'active', current_q: 0 }).eq('id', APP.session.id);
+  }
+
+  loadQuestion(0);
+}
+
+function addBotPlayers() {
+  ['Alex','Jordan','Sam','Taylor'].forEach(n => {
+    if (!APP.session.players.find(p=>p.name===n)) APP.session.players.push(makePlayer(n));
+  });
+  refreshLobby();
+  toast('Demo players added — click Start Quiz!', 'info');
+}
+
+/* ═══════════════════════════════════════════════════
+   QUIZ ENGINE — HOST
+═══════════════════════════════════════════════════ */
+function loadQuestion(idx) {
+  const q = APP.quiz.questions[idx];
+  if (!q) { endQuiz(); return; }
+
+  APP.answeredSet.clear();
+  APP.questionAnswered = false;
+  APP.timeLeft = q.timeOverride || APP.quiz.timePerQ;
+  APP.session.players.forEach(p => { p.answered = false; p.roundPts = 0; });
+
+  navigate('s-quiz');
+  const total = APP.quiz.questions.length;
+  document.getElementById('qCounter').textContent = `Q ${idx+1}/${total}`;
+  document.getElementById('qProgress').style.width = `${((idx+1)/total)*100}%`;
+  document.getElementById('qCatBadge').textContent = APP.quiz.category;
+  document.getElementById('qText').textContent = q.text;
+
+  const optContainer = document.getElementById('qOptions');
+  optContainer.innerHTML = q.options.map((opt, i) => `
+    <button class="opt-btn locked" id="optbtn-${i}" disabled>
+      <div class="opt-key">${String.fromCharCode(65+i)}</div>
+      <span class="opt-text">${opt}</span>
+    </button>
+  `).join('');
+
+  document.getElementById('hostDock').style.display = 'flex';
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('nextBtn').disabled = true;
+  document.getElementById('pAnsweredMsg').classList.remove('show');
+  updateAnswerMeter();
+  updateLiveboard();
+  startTimer(APP.timeLeft);
+  simulateBots(idx);
+}
+
+/* ═══════════════════════════════════════════════════
+   QUIZ ENGINE — PARTICIPANT
+═══════════════════════════════════════════════════ */
+function loadQuestionParticipant(idx) {
+  const q = APP.quiz.questions[idx];
+  if (!q) return;
+
+  APP.answeredSet.clear();
+  APP.questionAnswered = false;
+  APP.timeLeft = q.timeOverride || APP.quiz.timePerQ;
+  APP.session.currentQ = idx;
+
+  navigate('s-quiz');
+  const total = APP.quiz.questions.length;
+  document.getElementById('qCounter').textContent = `Q ${idx+1}/${total}`;
+  document.getElementById('qProgress').style.width = `${((idx+1)/total)*100}%`;
+  document.getElementById('qCatBadge').textContent = APP.quiz.category;
+  document.getElementById('qText').textContent = q.text;
+
+  const optContainer = document.getElementById('qOptions');
+  optContainer.innerHTML = q.options.map((opt, i) => `
+    <button class="opt-btn" id="optbtn-${i}" onclick="participantSelectOption(${i})">
+      <div class="opt-key">${String.fromCharCode(65+i)}</div>
+      <span class="opt-text">${opt}</span>
+    </button>
+  `).join('');
+
+  document.getElementById('hostDock').style.display = 'none';
+  document.getElementById('pAnsweredMsg').classList.remove('show');
+  updateAnswerMeter();
+  startTimer(APP.timeLeft);
+}
+
+async function participantSelectOption(optIdx) {
+  if (APP.questionAnswered) return;
+  APP.questionAnswered = true;
+
+  const q = APP.quiz.questions[APP.session.currentQ];
+  const timeUsed = (q.timeOverride || APP.quiz.timePerQ) - APP.timeLeft;
+  const maxT = q.timeOverride || APP.quiz.timePerQ;
+  const correct = optIdx === q.correct;
+  const pct = Math.max(0.15, 1 - (timeUsed / maxT) * 0.85);
+  const pts = correct ? Math.round(APP.quiz.maxPts * pct) : 0;
+
+  if (APP.me) {
+    APP.me.score += pts;
+    APP.me.roundPts = pts;
+    APP.me.answered = true;
+    APP.answeredSet.add(APP.me.id);
+  }
+
+  document.querySelectorAll('.opt-btn').forEach((b,i) => {
+    b.classList.add('locked'); b.disabled = true;
+    if (i === optIdx) b.classList.add('selected');
+  });
+
+  const msg = document.getElementById('pAnsweredMsg');
+  document.getElementById('pAnsweredIcon').textContent = correct ? '✅' : '❌';
+  document.getElementById('pAnsweredTitle').textContent = correct ? `Correct! +${pts} pts` : 'Wrong answer!';
+  document.getElementById('pAnsweredSub').textContent = correct ? 'Speed bonus applied. Waiting for others…' : 'Waiting for the host to reveal…';
+  msg.classList.add('show');
+
+  // Save to DB
+  if (sbConnected && APP.session.id && APP.me) {
+    try {
+      await sb.from('answers').upsert({
+        session_id: APP.session.id, player_id: APP.me.id,
+        question_idx: APP.session.currentQ, option_idx: optIdx, pts
+      });
+      await sb.from('players').update({
+        score: APP.me.score, round_pts: pts, answered: true
+      }).eq('id', APP.me.id);
+    } catch(e) { console.error('Answer save error:', e); }
+  }
+  updateAnswerMeter();
+}
+
+function simulateBots(qIdx) {
+  const q = APP.quiz.questions[qIdx];
+  const maxT = q.timeOverride || APP.quiz.timePerQ;
+  APP.session.players.forEach(p => {
+    if (p.id === APP.me?.id) return;
+    const delay = 1500 + Math.random() * (maxT * 800);
+    setTimeout(() => {
+      if (APP.session.currentQ !== qIdx) return;
+      if (p.answered) return;
+      const correct = Math.random() > 0.45;
+      const timeUsed = delay / 1000;
+      const pct = Math.max(0.1, 1 - (timeUsed / maxT) * 0.85);
+      const pts = correct ? Math.round(APP.quiz.maxPts * pct) : 0;
+      p.score += pts; p.roundPts = pts; p.answered = true;
+      APP.answeredSet.add(p.id);
+      updateAnswerMeter(); updateLiveboard(); checkAllAnswered();
+    }, delay);
+  });
+}
+
+function updateAnswerMeter() {
+  const total = APP.session.players.length || 1;
+  const done = APP.answeredSet.size;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('answerFill').style.width = pct + '%';
+  document.getElementById('answerLabel').textContent = `${done} / ${total} answered`;
+}
+
+function checkAllAnswered() {
+  const total = APP.session.players.length;
+  if (total > 0 && APP.answeredSet.size >= total) {
+    clearInterval(APP.timerInterval);
+    document.getElementById('timerNum').textContent = '✓';
+    if (APP.role === 'host') {
+      document.getElementById('revealBtn').disabled = false;
+      document.getElementById('nextBtn').disabled = false;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TIMER
+═══════════════════════════════════════════════════ */
+function startTimer(secs) {
+  clearInterval(APP.timerInterval);
+  APP.timeLeft = secs;
+  const circum = 138.2;
+  const arc = document.getElementById('timerArc');
+  const num = document.getElementById('timerNum');
+  function tick() {
+    const pct = APP.timeLeft / secs;
+    num.textContent = APP.timeLeft;
+    arc.style.strokeDashoffset = circum * (1 - pct);
+    arc.style.stroke = APP.timeLeft <= 5 ? 'var(--danger)' : APP.timeLeft <= 10 ? 'var(--warn)' : 'var(--accent)';
+    if (APP.timeLeft <= 0) { clearInterval(APP.timerInterval); onTimeUp(); return; }
+    APP.timeLeft--;
+  }
+  tick();
+  APP.timerInterval = setInterval(tick, 1000);
+}
+
+function onTimeUp() {
+  clearInterval(APP.timerInterval);
+  document.getElementById('timerNum').textContent = '0';
+  document.querySelectorAll('.opt-btn').forEach(b => { b.disabled = true; b.classList.add('locked'); });
+  if (APP.role === 'host') {
+    document.getElementById('revealBtn').disabled = false;
+    document.getElementById('nextBtn').disabled = false;
+    toast('⏱ Time\'s up!', 'warn');
+  }
+  if (APP.role === 'participant' && !APP.questionAnswered) {
+    APP.questionAnswered = true;
+    document.getElementById('pAnsweredIcon').textContent = '⏱';
+    document.getElementById('pAnsweredTitle').textContent = 'Time\'s up!';
+    document.getElementById('pAnsweredSub').textContent = 'You didn\'t answer in time.';
+    document.getElementById('pAnsweredMsg').classList.add('show');
+    if (sbConnected && APP.session.id && APP.me) {
+      sb.from('players').update({ answered: true }).eq('id', APP.me.id).then(() => {});
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   REVEAL (HOST)
+═══════════════════════════════════════════════════ */
+function revealAnswer() {
+  clearInterval(APP.timerInterval);
+  const q = APP.quiz.questions[APP.session.currentQ];
+  document.querySelectorAll('.opt-btn').forEach((b, i) => {
+    b.disabled = true; b.classList.remove('selected');
+    if (i === q.correct) b.classList.add('reveal-correct');
+    else b.classList.add('reveal-wrong');
+  });
+  document.getElementById('revealQText').textContent = q.text;
+  document.getElementById('revealAnswerText').textContent = q.options[q.correct];
+  const sorted = [...APP.session.players].sort((a,b) => b.score - a.score);
+  document.getElementById('revealScores').innerHTML = sorted.map((p,i) => `
+    <div class="rscore-row" style="animation-delay:${i*.06}s">
+      <span class="rscore-rank">${i+1}</span>
+      <span>${p.emoji}</span>
+      <span class="rscore-name">${p.name}</span>
+      <span class="rscore-round">${p.roundPts > 0 ? '+'+p.roundPts : '—'}</span>
+      <span class="rscore-total">${p.score.toLocaleString()}</span>
+    </div>`).join('');
+  const isLast = APP.session.currentQ >= APP.quiz.questions.length - 1;
+  document.getElementById('revealNextBtn').textContent = isLast ? '🏆 View Results' : 'Next Question →';
+  document.getElementById('revealModal').classList.add('open');
+  updateLiveboard();
+}
+
+function closeReveal() { document.getElementById('revealModal').classList.remove('open'); }
+
+async function hostNextQuestion() {
+  closeReveal();
+  APP.session.currentQ++;
+  if (APP.session.currentQ >= APP.quiz.questions.length) {
+    endQuiz();
+  } else {
+    if (sbConnected && APP.session.id) {
+      await sb.from('sessions').update({ current_q: APP.session.currentQ }).eq('id', APP.session.id);
+      // Reset all players' answered flag for new question
+      await sb.from('players').update({ answered: false, round_pts: 0 }).eq('session_id', APP.session.id);
+    }
+    loadQuestion(APP.session.currentQ);
+  }
+}
+
+function endQuizEarly() {
+  if (!confirm('End the quiz and show results?')) return;
+  endQuiz();
+}
+
+/* ═══════════════════════════════════════════════════
+   LIVE SCOREBOARD
+═══════════════════════════════════════════════════ */
+function updateLiveboard() {
+  const sorted = [...APP.session.players].sort((a,b) => b.score - a.score);
+  document.getElementById('liveboardList').innerHTML = sorted.slice(0,6).map((p,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:var(--font-mono);font-size:.68rem;color:var(--text3);width:16px;">${i+1}</span>
+      <span style="font-size:.95rem;">${p.emoji}</span>
+      <span style="flex:1;font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+      <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--accent);font-weight:700;">${p.score}</span>
+    </div>`).join('');
+}
+
+function toggleLiveboard() {
+  const lb = document.getElementById('liveboard');
+  lb.style.display = lb.style.display === 'none' ? 'block' : 'none';
+  updateLiveboard();
+}
+
+/* ═══════════════════════════════════════════════════
+   FINAL SCOREBOARD
+═══════════════════════════════════════════════════ */
+async function endQuiz() {
+  clearInterval(APP.timerInterval);
+  APP.session.finished = true;
+  APP.session.started = false;
+
+  if (sbConnected && APP.session.id) {
+    await sb.from('sessions').update({ status: 'finished' }).eq('id', APP.session.id);
+  }
+
+  buildScoreboard(APP.session.players, APP.quiz.title);
+  navigate('s-scoreboard');
+  if (APP.session.players.length > 0) confetti();
+}
+
+async function loadFinalScoresParticipant(sessionId) {
+  let players = APP.session.players;
+  if (sbConnected) {
+    const { data } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
+    if (data) players = data.map(dbPlayerToLocal);
+  }
+  buildScoreboard(players, APP.quiz.title);
+  navigate('s-scoreboard');
+  confetti();
+}
+
+function buildScoreboard(players, title) {
+  const sorted = [...players].sort((a,b) => b.score - a.score);
+  const maxScore = sorted[0]?.score || 1;
+  document.getElementById('sbQuizName').textContent = title;
+  const [p1,p2,p3] = sorted;
+  document.getElementById('podium').innerHTML = `
+    ${p2 ? `<div class="podium-slot p2"><div style="width:50px;height:50px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:${p2.color}22;border:2px solid ${p2.color}55;">${p2.emoji}</div><div class="podium-name">${p2.name}</div><div class="podium-score">${p2.score.toLocaleString()}</div><div class="podium-block">🥈</div></div>` : ''}
+    ${p1 ? `<div class="podium-slot p1"><div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:${p1.color}22;border:2px solid ${p1.color}88;box-shadow:0 0 20px ${p1.color}44;">${p1.emoji}</div><div class="podium-name" style="font-size:.95rem;">${p1.name}</div><div class="podium-score" style="font-size:1rem;">${p1.score.toLocaleString()}</div><div class="podium-block">🥇</div></div>` : ''}
+    ${p3 ? `<div class="podium-slot p3"><div style="width:46px;height:46px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:${p3.color}22;border:2px solid ${p3.color}44;">${p3.emoji}</div><div class="podium-name">${p3.name}</div><div class="podium-score">${p3.score.toLocaleString()}</div><div class="podium-block">🥉</div></div>` : ''}
+  `;
+  document.getElementById('sbList').innerHTML = sorted.map((p,i) => `
+    <div class="sb-row" style="animation-delay:${i*.06}s">
+      <div class="sb-pos">${i+1}</div>
+      <div class="sb-avatar" style="background:${p.color}22;border:1px solid ${p.color}55;">${p.emoji}</div>
+      <div class="sb-name">${p.name}</div>
+      <div class="sb-bar-wrap"><div class="sb-bar-fill" style="width:${Math.round((p.score/maxScore)*100)}%"></div></div>
+      <div class="sb-score">${p.score.toLocaleString()}</div>
+    </div>`).join('');
+}
+
+function exportResults() {
+  const sorted = [...APP.session.players].sort((a,b) => b.score - a.score);
+  const csv = ['Rank,Name,Score', ...sorted.map((p,i) => `${i+1},${p.name},${p.score}`)].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `${APP.quiz.title.replace(/\s+/g,'_')}_results.csv`;
+  a.click();
+  toast('Results exported!', 'success');
+}
+
+/* ═══════════════════════════════════════════════════
+   CONFETTI
+═══════════════════════════════════════════════════ */
+function confetti() {
+  const cols = ['#22cc70','#14a85a','#e8b84b','#2d9fa0','#8e44ad','#e91e63','#58a6ff'];
+  for (let i=0;i<90;i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-bit';
+      const size = 6 + Math.random()*8;
+      el.style.cssText = `left:${Math.random()*100}vw;width:${size}px;height:${size}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'3px'};animation-duration:${1.8+Math.random()*2}s;animation-delay:${Math.random()*.4}s;`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 4000);
+    }, i*25);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   ADMIN
+═══════════════════════════════════════════════════ */
+function adminLogin() {
+  if (document.getElementById('adminPass').value === 'admin123') {
+    document.getElementById('adminGate').style.display = 'none';
+    document.getElementById('adminDash').style.display = 'block';
+    refreshAdminDash();
+    toast('Welcome, Admin!', 'success');
+  } else { toast('Incorrect password!', 'error'); }
+}
+
+async function refreshAdminDash() {
+  let sessions = APP.session.code ? [{ code: APP.session.code, title: APP.quiz.title, questions: APP.quiz.questions.length, players: APP.session.players.length, date: new Date().toLocaleDateString(), status: APP.session.finished ? 'Finished' : APP.session.started ? 'Active' : 'Waiting' }] : [];
+  let players = APP.session.players;
+
+  if (sbConnected) {
+    const { data: sdata } = await sb.from('sessions').select('*').order('created_at', { ascending: false }).limit(20);
+    if (sdata) sessions = sdata.map(s => ({ code: s.code, title: s.title, questions: 0, players: 0, date: new Date(s.created_at).toLocaleDateString(), status: s.status === 'finished' ? 'Finished' : s.status === 'active' ? 'Active' : 'Waiting' }));
+    const { data: pdata } = await sb.from('players').select('*').order('score', { ascending: false }).limit(50);
+    if (pdata) players = pdata.map(dbPlayerToLocal);
+  }
+
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-box"><div class="stat-val">${sessions.length}</div><div class="stat-lbl">Sessions</div></div>
+    <div class="stat-box"><div class="stat-val">${players.length}</div><div class="stat-lbl">Players</div></div>
+    <div class="stat-box"><div class="stat-val">${APP.quiz.questions.length}</div><div class="stat-lbl">Questions</div></div>
+    <div class="stat-box"><div class="stat-val">${sessions.filter(s=>s.status==='Active').length}</div><div class="stat-lbl">Live Now</div></div>
+  `;
+
+  document.getElementById('adminSessionsList').innerHTML = sessions.length === 0
+    ? `<div class="empty-state"><div class="icon">📭</div><p>No sessions yet.</p></div>`
+    : `<table class="data-table"><thead><tr><th>Code</th><th>Title</th><th>Date</th><th>Status</th></tr></thead><tbody>
+        ${sessions.map(s=>`<tr><td class="mono" style="color:var(--accent)">${s.code}</td><td style="font-weight:600">${s.title}</td><td style="color:var(--text3)">${s.date}</td><td><span class="badge ${s.status==='Active'?'badge-green':s.status==='Waiting'?'badge-warn':'badge-muted'}">${s.status}</span></td></tr>`).join('')}
+      </tbody></table>`;
+
+  document.getElementById('adminPlayersList').innerHTML = players.length === 0
+    ? `<div class="empty-state"><div class="icon">👥</div><p>No players yet.</p></div>`
+    : `<table class="data-table"><thead><tr><th>Player</th><th>Score</th></tr></thead><tbody>
+        ${players.map(p=>`<tr><td><span style="font-size:1.2rem;margin-right:8px">${p.emoji}</span><strong>${p.name}</strong></td><td class="mono" style="color:var(--accent);font-weight:700">${p.score.toLocaleString()}</td></tr>`).join('')}
+      </tbody></table>`;
+}
+
+function switchAdminTab(name, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`apanel-${name}`).classList.add('active');
+  refreshAdminDash();
+}
+
+function saveAdminSettings() {
+  APP.quiz.timePerQ = parseInt(document.getElementById('setTime').value)||30;
+  APP.quiz.maxPts = parseInt(document.getElementById('setPts').value)||1000;
+  toast('Settings saved!', 'success');
+}
+
+/* ═══════════════════════════════════════════════════
+   URL PARAM: Auto-join from QR scan
+═══════════════════════════════════════════════════ */
+(function init() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('join');
+  if (code) {
+    const decoded = decodeURIComponent(code).toUpperCase();
+    APP.pendingCode = decoded;
+    document.getElementById('setupModal').classList.remove('open');
+    // Wait for Supabase to init, then proceed
+    setTimeout(async () => {
+      document.getElementById('scanCodeInput').value = decoded;
+      await proceedWithCode(decoded);
+    }, 1200);
+  }
+})();
+
+/* ═══════════════════════════════════════════════════
+   POLL for demo mode
+═══════════════════════════════════════════════════ */
+setInterval(() => {
+  if (APP.currentScreen === 's-pwait') updatePwaitPlayers();
+  if (APP.currentScreen === 's-lobby') refreshLobby();
+  if (APP.currentScreen === 's-quiz') { updateLiveboard(); updateAnswerMeter(); }
+}, 2000);
+</script>
+</body>
+</html>
