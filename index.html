@@ -332,7 +332,7 @@ textarea{resize:vertical;min-height:70px}
     <div style="text-align:center;margin-bottom:1.5rem;">
       <div style="font-size:2.5rem;margin-bottom:.75rem;">🔗</div>
       <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem;">Connect to Supabase</h2>
-      <p style="color:var(--text2);font-size:.88rem;line-height:1.6;">Enter your Supabase project credentials to enable real-time multiplayer quizzes. This allows players to join from any device by scanning the QR code.</p>
+      <p style="color:var(--text2);font-size:.88rem;line-height:1.6;">Enter your Supabase project credentials to enable real-time multiplayer. <strong style="color:var(--text);">The host and every player</strong> must use the same project (connect once per device, or paste keys into <code style="font-size:.75rem;color:var(--accent);">SUPABASE_CONFIG</code> in the HTML).</p>
     </div>
 
     <div style="background:rgba(34,204,112,.06);border:1px solid rgba(34,204,112,.2);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem;font-size:.82rem;color:var(--text2);line-height:1.6;">
@@ -474,6 +474,7 @@ create policy "public_all_answers" on answers for all using (true) with check (t
         <span id="dbStatusText">Checking DB…</span>
       </div>
       <button class="btn btn-ghost btn-xs" onclick="document.getElementById('setupModal').classList.add('open')">⚙ DB Setup</button>
+      <span style="font-family:var(--font-mono);font-size:.62rem;color:var(--text3);">v2.1</span>
     </div>
   </div>
 </div>
@@ -542,6 +543,15 @@ create policy "public_all_answers" on answers for all using (true) with check (t
     <div class="qr-wrapper"><div id="qr-canvas"></div></div>
     <div class="session-pill"><span class="dot"></span><span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text3);margin-right:4px;">CODE</span><span class="code" id="qrCodeDisplay">—</span></div>
     <p style="color:var(--text3);font-size:.78rem;margin-bottom:1.5rem;">Players scan the QR or visit this URL and enter the code manually.</p>
+    <div id="qrDbStatus" class="badge badge-warn" style="margin-bottom:1rem;display:none;">Database not connected — players cannot join yet</div>
+    <div id="qrLocalhostHelp" style="display:none;text-align:left;margin-bottom:1rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5;">You're on <strong>localhost</strong>. Phones can't open that link. Enter your PC's LAN address (same Wi‑Fi), then update the QR:</p>
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label class="field-label">Public URL for phones</label>
+        <input type="text" id="publicBaseInput" placeholder="http://192.168.1.12:5500/index.html"/>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm btn-block" onclick="regenerateJoinQr()">Update QR for phones</button>
+    </div>
     <div style="background:rgba(34,204,112,.06);border:1px solid rgba(34,204,112,.2);border-radius:var(--radius-sm);padding:.75rem;margin-bottom:1.5rem;font-size:.78rem;color:var(--text2);word-break:break-all;" id="qrJoinUrl"></div>
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="navigate('s-lobby')">Open Lobby →</button>
@@ -729,7 +739,14 @@ create policy "public_all_answers" on answers for all using (true) with check (t
 </div>
 
 <script>
-  const SUPABASE_CONFIG = { url: 'https://divesmqxsbzehqrnjmqb.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpdmVzbXF4c2J6ZWhxcm5qbXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNDY2MTksImV4cCI6MjA5NDYyMjYxOX0.IrDoJKeUz5g6qdKU-OlsdvDBeKnE0sU_C21sQJ6_yc8' };
+/* Paste Supabase URL + anon key here — every device auto-connects (recommended). */
+const SUPABASE_CONFIG = {
+  url: 'https://divesmqxsbzehqrnjmqb.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpdmVzbXF4c2J6ZWhxcm5qbXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNDY2MTksImV4cCI6MjA5NDYyMjYxOX0.IrDoJKeUz5g6qdKU-OlsdvDBeKnE0sU_C21sQJ6_yc8'
+};
+/* If hosting on localhost, set your LAN URL so phones can open the QR link, e.g. http://192.168.1.12:5500 */
+const APP_CONFIG = { publicBaseUrl: 'http://172.20.10.2:5500/index.html' };
+
 /* ═══════════════════════════════════════════════════
    SUPABASE CLIENT
 ═══════════════════════════════════════════════════ */
@@ -743,6 +760,25 @@ function getSavedCreds() {
   try { return JSON.parse(localStorage.getItem('uog_sb_creds') || 'null'); } catch(e) { return null; }
 }
 
+function getEmbeddedCreds() {
+  const url = (SUPABASE_CONFIG.url || '').trim();
+  const key = (SUPABASE_CONFIG.key || '').trim();
+  return url && key ? { url, key } : null;
+}
+function getActiveCreds() {
+  return getSavedCreds() || getEmbeddedCreds();
+}
+
+function getEmbeddedCreds() {
+  const url = (SUPABASE_CONFIG.url || '').trim();
+  const key = (SUPABASE_CONFIG.key || '').trim();
+  return url && key ? { url, key } : null;
+}
+
+function getActiveCreds() {
+  return getSavedCreds() || getEmbeddedCreds();
+}
+
 function saveCreds(url, key) {
   localStorage.setItem('uog_sb_creds', JSON.stringify({ url, key }));
 }
@@ -752,7 +788,6 @@ async function initSupabase(url, key) {
     sb = window.supabase.createClient(url, key, {
       realtime: { params: { eventsPerSecond: 20 } }
     });
-    // Test connection
     const { error } = await sb.from('sessions').select('id').limit(1);
     if (error && error.code !== 'PGRST116') throw error;
     sbConnected = true;
@@ -760,10 +795,160 @@ async function initSupabase(url, key) {
     return true;
   } catch(e) {
     console.error('Supabase init error:', e);
+    sb = null;
     sbConnected = false;
     updateDbStatus(false);
     return false;
   }
+}
+
+/** Resolves when the initial auto-connect attempt finishes. */
+const sbReady = (async function bootstrapSupabase() {
+  const dot = document.getElementById('dbDot');
+  if (dot) dot.className = 'db-dot checking';
+  const embedded = getEmbeddedCreds();
+  if (embedded) {
+    const urlEl = document.getElementById('sbUrl');
+    const keyEl = document.getElementById('sbKey');
+    if (urlEl && !urlEl.value) urlEl.value = embedded.url;
+    if (keyEl && !keyEl.value) keyEl.value = embedded.key;
+  }
+  const creds = getActiveCreds();
+  if (creds?.url && creds?.key) {
+    const ok = await initSupabase(creds.url, creds.key);
+    if (ok) document.getElementById('setupModal')?.classList.remove('open');
+    return ok;
+  }
+  setTimeout(() => { if (!sbConnected) updateDbStatus(false); }, 500);
+  return false;
+})();
+
+async function ensureSupabaseReady() {
+  await sbReady;
+  const creds = getActiveCreds();
+  if ((!sb || !sbConnected) && creds?.url && creds?.key) {
+    await initSupabase(creds.url, creds.key);
+  }
+  return !!(sb && sbConnected);
+}
+
+function parseJoinCode(input) {
+  if (!input) return '';
+  let raw = String(input).trim();
+  try {
+    const url = new URL(raw, window.location.origin);
+    const join = url.searchParams.get('join');
+    if (join) return decodeURIComponent(join).toUpperCase().trim();
+  } catch (_) {}
+  const match = raw.match(/GENIUS-[A-Z0-9]{4}/i);
+  if (match) return match[0].toUpperCase();
+  return raw.toUpperCase().trim();
+}
+
+function applyCredsFromJoinUrl(input) {
+  let params;
+  try {
+    if (input && String(input).includes('?')) {
+      params = new URL(input, window.location.origin).searchParams;
+    } else {
+      params = new URLSearchParams(window.location.search);
+    }
+  } catch (_) {
+    params = new URLSearchParams(window.location.search);
+  }
+  const sbu = params.get('sbu');
+  const sbk = params.get('sbk');
+  if (!sbu || !sbk) return null;
+  try {
+    const url = atob(decodeURIComponent(sbu));
+    const key = atob(decodeURIComponent(sbk));
+    saveCreds(url, key);
+    return { url, key };
+  } catch (e) {
+    console.warn('applyCredsFromJoinUrl', e);
+    return null;
+  }
+}
+
+function credsToUrlParams(creds) {
+  if (!creds?.url || !creds?.key) return '';
+  return '&sbu=' + encodeURIComponent(btoa(creds.url)) + '&sbk=' + encodeURIComponent(btoa(creds.key));
+}
+
+function getPublicBaseUrl() {
+  const custom = (APP_CONFIG.publicBaseUrl || sessionStorage.getItem('uog_public_base') || '').trim();
+  if (custom) return custom.replace(/[?#].*$/, '').replace(/\/$/, '');
+  const { protocol, hostname, port, pathname } = window.location;
+  if (protocol === 'file:') return null;
+  const portPart = port && port !== '80' && port !== '443' ? ':' + port : '';
+  return protocol + '//' + hostname + portPart + pathname;
+}
+
+function isLocalDevHost() {
+  const h = window.location.hostname;
+  return h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+}
+
+function saveSessionLocal(code, payload) {
+  try {
+    const all = JSON.parse(localStorage.getItem('uog_sessions') || '{}');
+    all[code] = { ...payload, savedAt: Date.now() };
+    localStorage.setItem('uog_sessions', JSON.stringify(all));
+  } catch (e) { console.warn('saveSessionLocal', e); }
+}
+
+function loadSessionLocal(code) {
+  try {
+    const all = JSON.parse(localStorage.getItem('uog_sessions') || '{}');
+    return all[code] || null;
+  } catch (e) { return null; }
+}
+
+function applySessionPayload(sess, qrows) {
+  APP.session.id = sess.id || null;
+  APP.session.code = sess.code;
+  APP.session.started = sess.status === 'active';
+  APP.session.currentQ = sess.current_q ?? -1;
+  APP.session.finished = sess.status === 'finished';
+  APP.quiz.title = sess.title;
+  APP.quiz.description = sess.description || '';
+  APP.quiz.timePerQ = sess.time_per_q ?? 30;
+  APP.quiz.maxPts = sess.max_pts ?? 1000;
+  APP.quiz.category = sess.category || 'General';
+  APP.quiz.questions = (qrows || []).map(r => ({
+    text: r.text,
+    options: Array.isArray(r.options) ? r.options : JSON.parse(r.options || '[]'),
+    correct: r.correct,
+    timeOverride: r.time_override
+  }));
+}
+
+async function fetchSessionFromDb(code) {
+  if (!sb) return { ok: false, reason: 'no_client' };
+  const { data: sess, error } = await sb.from('sessions').select('*').eq('code', code).maybeSingle();
+  if (error) {
+    console.error('Session lookup error:', error);
+    return { ok: false, reason: error.message || 'db_error' };
+  }
+  if (!sess) return { ok: false, reason: 'not_found' };
+  const { data: qrows, error: qErr } = await sb.from('questions').select('*').eq('session_id', sess.id).order('idx', { ascending: true });
+  if (qErr) console.error('Questions lookup error:', qErr);
+  applySessionPayload(sess, qrows);
+  const { data: prows } = await sb.from('players').select('*').eq('session_id', sess.id);
+  APP.session.players = (prows || []).map(dbPlayerToLocal);
+  return { ok: true };
+}
+
+function applyLocalSessionSnapshot(snapshot) {
+  if (!snapshot) return false;
+  APP.session.id = snapshot.id || null;
+  APP.session.code = snapshot.code;
+  APP.session.started = !!snapshot.started;
+  APP.session.currentQ = snapshot.currentQ ?? -1;
+  APP.session.finished = !!snapshot.finished;
+  APP.session.players = snapshot.players || [];
+  APP.quiz = { ...APP.quiz, ...snapshot.quiz };
+  return true;
 }
 
 function updateDbStatus(ok) {
@@ -775,8 +960,9 @@ function updateDbStatus(ok) {
 }
 
 async function connectSupabase() {
-  const url = document.getElementById('sbUrl').value.trim();
-  const key = document.getElementById('sbKey').value.trim();
+  const embedded = getEmbeddedCreds();
+  const url = document.getElementById('sbUrl').value.trim() || embedded?.url || '';
+  const key = document.getElementById('sbKey').value.trim() || embedded?.key || '';
   if (!url || !key) { toast('Enter both URL and key!', 'error'); return; }
 
   toast('Connecting…', 'info');
@@ -793,28 +979,8 @@ async function connectSupabase() {
 function dismissSetup() {
   document.getElementById('setupModal').classList.remove('open');
   updateDbStatus(false);
-  toast('Running in demo mode — QR scanning works on same device only.', 'info', 5000);
+  toast('Demo mode: connect Supabase on each phone for real QR joins.', 'info', 5000);
 }
-
-// Auto-connect on load
-(async function autoConnect() {
-  const dot = document.getElementById('dbDot');
-  if (dot) dot.className = 'db-dot checking';
-  const creds = getSavedCreds();
-  if (creds?.url && creds?.key) {
-    const ok = await initSupabase(creds.url, creds.key);
-    if (ok) {
-      document.getElementById('setupModal').classList.remove('open');
-    }
-  } else {
-    // Show setup modal after brief delay
-    setTimeout(() => {
-      if (!sbConnected) {
-        updateDbStatus(false);
-      }
-    }, 500);
-  }
-})();
 
 /* ═══════════════════════════════════════════════════
    STATE
@@ -1042,9 +1208,17 @@ async function launchQuiz() {
   APP.session.finished = false;
   APP.session.id = null;
 
+  let dbSaved = false;
+  await ensureSupabaseReady();
+  if (!sbConnected) {
+    toast('Connect Supabase before going live — players cannot join without it.', 'error', 6000);
+    document.getElementById('setupModal')?.classList.add('open');
+    btn.disabled = false;
+    btn.textContent = '🚀 Go Live — Generate QR';
+    return;
+  }
   if (sbConnected) {
     try {
-      // Insert session
       const { data: sess, error: sessErr } = await sb.from('sessions').insert({
         code, title: APP.quiz.title, description: APP.quiz.description,
         time_per_q: APP.quiz.timePerQ, max_pts: APP.quiz.maxPts,
@@ -1053,7 +1227,6 @@ async function launchQuiz() {
       if (sessErr) throw sessErr;
       APP.session.id = sess.id;
 
-      // Insert questions
       const qRows = APP.quiz.questions.map((q, i) => ({
         session_id: sess.id, idx: i, text: q.text,
         options: q.options, correct: q.correct, time_override: q.timeOverride
@@ -1061,38 +1234,86 @@ async function launchQuiz() {
       const { error: qErr } = await sb.from('questions').insert(qRows);
       if (qErr) throw qErr;
 
-      // Subscribe to players joining
       subscribeHostChannels(sess.id);
-
+      dbSaved = true;
       toast('Quiz saved to database!', 'success');
     } catch(e) {
       console.error('Launch error:', e);
-      toast('DB error: ' + e.message + ' — continuing in demo mode.', 'warn', 5000);
+      toast('Could not save quiz to database: ' + e.message, 'error', 6000);
+      btn.disabled = false;
+      btn.textContent = '🚀 Go Live — Generate QR';
+      return;
     }
-  } else {
-    toast('Demo mode — QR joins work on same device only.', 'info', 4000);
   }
 
-  // Generate QR
-  const joinUrl = buildJoinUrl(code);
+  saveSessionLocal(code, {
+    id: APP.session.id,
+    code,
+    started: false,
+    finished: false,
+    currentQ: -1,
+    players: [],
+    quiz: { ...APP.quiz },
+    dbSaved
+  });
+
   document.getElementById('qrQuizName').textContent = APP.quiz.title;
   document.getElementById('qrCodeDisplay').textContent = code;
-  document.getElementById('qrJoinUrl').textContent = joinUrl;
-
-  const qrDiv = document.getElementById('qr-canvas');
-  qrDiv.innerHTML = '';
-  new QRCode(qrDiv, { text: joinUrl, width: 220, height: 220, colorDark: '#021a0c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
-
   document.getElementById('lobbyTitle').textContent = APP.quiz.title;
   document.getElementById('lobbyCode').textContent = code;
+  renderJoinQr(code, dbSaved);
+
+  if (dbSaved) {
+    const check = await fetchSessionFromDb(code);
+    if (!check.ok) toast('Warning: session saved but lookup failed. Check Supabase RLS/schema.', 'warn', 6000);
+  }
 
   btn.disabled = false; btn.textContent = '🚀 Go Live — Generate QR';
   navigate('s-qr');
 }
 
 function buildJoinUrl(code) {
-  const base = window.location.href.split('?')[0];
-  return base + '?join=' + encodeURIComponent(code);
+  const base = getPublicBaseUrl();
+  if (!base) {
+    toast('Set a public URL (or deploy online) so phones can open the QR link.', 'warn', 6000);
+    return window.location.href.split('?')[0] + '?join=' + encodeURIComponent(code);
+  }
+  const creds = getActiveCreds();
+  return base + '?join=' + encodeURIComponent(code) + credsToUrlParams(creds);
+}
+
+function renderJoinQr(code, dbSaved) {
+  const joinUrl = buildJoinUrl(code);
+  document.getElementById('qrJoinUrl').textContent = joinUrl;
+  const qrDiv = document.getElementById('qr-canvas');
+  qrDiv.innerHTML = '';
+  new QRCode(qrDiv, { text: joinUrl, width: 220, height: 220, colorDark: '#021a0c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+
+  const statusEl = document.getElementById('qrDbStatus');
+  if (statusEl) {
+    statusEl.style.display = 'inline-flex';
+    statusEl.className = 'badge ' + (dbSaved ? 'badge-green' : 'badge-warn');
+    statusEl.textContent = dbSaved ? 'Ready — players can scan from any phone' : 'Database not connected — players cannot join yet';
+  }
+
+  const localhostHelp = document.getElementById('qrLocalhostHelp');
+  const baseInput = document.getElementById('publicBaseInput');
+  if (localhostHelp && baseInput) {
+    const showLocal = isLocalDevHost() && !APP_CONFIG.publicBaseUrl;
+    localhostHelp.style.display = showLocal ? 'block' : 'none';
+    if (showLocal && !baseInput.value) {
+      baseInput.value = sessionStorage.getItem('uog_public_base') || '';
+    }
+  }
+}
+
+function regenerateJoinQr() {
+  const input = document.getElementById('publicBaseInput');
+  const url = (input?.value || '').trim();
+  if (!url) { toast('Enter your LAN URL, e.g. http://192.168.1.12:5500/index.html', 'error'); return; }
+  sessionStorage.setItem('uog_public_base', url.replace(/[?#].*$/, '').replace(/\/$/, ''));
+  renderJoinQr(APP.session.code, !!APP.session.id);
+  toast('QR updated for phones on your network!', 'success');
 }
 
 function copyLink() {
@@ -1209,55 +1430,57 @@ function stopScan() {
 }
 
 function handleQRResult(text) {
-  let code = text;
-  try {
-    const url = new URL(text);
-    const p = url.searchParams.get('join');
-    if (p) code = decodeURIComponent(p);
-  } catch(e) {}
-  proceedWithCode(code);
+  proceedWithCode(text);
 }
 
-async function proceedWithCode(code) {
-  if (!code || code.length < 3) { toast('Invalid code.', 'error'); return; }
-  code = code.toUpperCase().trim();
+async function proceedWithCode(rawCode) {
+  const code = parseJoinCode(rawCode);
+  if (!code || code.length < 3) { toast('Invalid session code.', 'error'); return; }
   APP.pendingCode = code;
   stopScan();
 
-  if (sbConnected) {
-    // Look up session from DB
-    const { data: sess, error } = await sb.from('sessions').select('*').eq('code', code).single();
-    if (error || !sess) {
-      toast('Session not found: ' + code, 'error'); return;
+  toast('Looking up session…', 'info', 2000);
+  const injected = applyCredsFromJoinUrl(window.location.href);
+  if (!injected && rawCode && String(rawCode).includes('?')) applyCredsFromJoinUrl(rawCode);
+
+  const hasDb = await ensureSupabaseReady();
+  let found = false;
+  let lookupReason = '';
+
+  if (hasDb) {
+    const result = await fetchSessionFromDb(code);
+    found = result.ok;
+    lookupReason = result.reason || '';
+    if (found && APP.session.finished) {
+      toast('This quiz has already ended.', 'error');
+      return;
     }
-    if (sess.status === 'finished') { toast('This quiz has already ended.', 'error'); return; }
+  }
 
-    // Load quiz info from DB
-    APP.session.id = sess.id;
-    APP.session.code = sess.code;
-    APP.session.started = sess.status === 'active';
-    APP.session.currentQ = sess.current_q;
-
-    // Load questions
-    const { data: qrows } = await sb.from('questions').select('*').eq('session_id', sess.id).order('idx');
-    APP.quiz.title = sess.title;
-    APP.quiz.description = sess.description;
-    APP.quiz.timePerQ = sess.time_per_q;
-    APP.quiz.maxPts = sess.max_pts;
-    APP.quiz.category = sess.category;
-    APP.quiz.questions = (qrows || []).map(r => ({
-      text: r.text, options: r.options, correct: r.correct, timeOverride: r.time_override
-    }));
-
-    // Load existing players
-    const { data: prows } = await sb.from('players').select('*').eq('session_id', sess.id);
-    APP.session.players = (prows || []).map(dbPlayerToLocal);
-  } else {
-    // Demo mode: validate against local session
-    if (APP.session.code && code !== APP.session.code) {
-      toast('Session not found. Try: ' + APP.session.code, 'error'); return;
+  if (!found) {
+    const local = loadSessionLocal(code);
+    if (local?.quiz?.questions?.length) {
+      applyLocalSessionSnapshot(local);
+      found = true;
     }
-    if (!APP.session.code) { toast('No active session found.', 'error'); return; }
+  }
+
+  if (!found && APP.session.code === code && APP.quiz.questions.length) {
+    found = true;
+  }
+
+  if (!found) {
+    if (!hasDb && !getActiveCreds()) {
+      toast('Scan the host QR again, or connect Supabase (⚙ DB Setup) with the same project as the host.', 'error', 7000);
+      document.getElementById('setupModal')?.classList.add('open');
+    } else if (lookupReason === 'not_found') {
+      toast('No active session for ' + code + '. Host must click Go Live and see "Quiz saved to database!"', 'error', 7000);
+    } else if (hasDb) {
+      toast('Could not load session: ' + (lookupReason || 'unknown error'), 'error', 6000);
+    } else {
+      toast('No active session. Host must connect Supabase before going live.', 'error', 6000);
+    }
+    return;
   }
 
   document.getElementById('joinCode').value = code;
@@ -1271,16 +1494,21 @@ async function proceedWithCode(code) {
    JOIN PARTICIPANT
 ═══════════════════════════════════════════════════ */
 async function joinQuiz() {
-  const code = (document.getElementById('joinCode').value || APP.pendingCode || '').toUpperCase().trim();
+  const code = parseJoinCode(document.getElementById('joinCode').value || APP.pendingCode || '');
   const name = document.getElementById('joinName').value.trim();
   if (!code) { toast('Enter a session code!', 'error'); return; }
   if (!name) { toast('Enter your name!', 'error'); return; }
 
   APP.role = 'participant';
 
+  applyCredsFromJoinUrl(window.location.href);
+  await ensureSupabaseReady();
+  if (sbConnected && !APP.session.id) {
+    await fetchSessionFromDb(code);
+  }
+
   if (sbConnected && APP.session.id) {
-    // Check dupe
-    const { data: exists } = await sb.from('players').select('id').eq('session_id', APP.session.id).ilike('name', name).single();
+    const { data: exists } = await sb.from('players').select('id').eq('session_id', APP.session.id).ilike('name', name).maybeSingle();
     if (exists) { toast('That name is taken!', 'error'); return; }
 
     const emoji = rnd(EMOJIS);
@@ -1781,19 +2009,16 @@ function saveAdminSettings() {
 /* ═══════════════════════════════════════════════════
    URL PARAM: Auto-join from QR scan
 ═══════════════════════════════════════════════════ */
-(function init() {
+(async function initFromJoinUrl() {
   const params = new URLSearchParams(window.location.search);
-  const code = params.get('join');
-  if (code) {
-    const decoded = decodeURIComponent(code).toUpperCase();
-    APP.pendingCode = decoded;
-    document.getElementById('setupModal').classList.remove('open');
-    // Wait for Supabase to init, then proceed
-    setTimeout(async () => {
-      document.getElementById('scanCodeInput').value = decoded;
-      await proceedWithCode(decoded);
-    }, 1200);
-  }
+  const code = parseJoinCode(params.get('join') || '');
+  if (!code) return;
+  APP.pendingCode = code;
+  applyCredsFromJoinUrl(window.location.href);
+  document.getElementById('setupModal')?.classList.remove('open');
+  const scanInput = document.getElementById('scanCodeInput');
+  if (scanInput) scanInput.value = code;
+  await proceedWithCode(window.location.href);
 })();
 
 /* ═══════════════════════════════════════════════════
