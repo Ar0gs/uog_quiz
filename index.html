@@ -122,6 +122,26 @@ textarea{resize:vertical;min-height:70px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--g500);border-radius:4px}
 
+/* BATCH BANNER */
+.batch-banner{display:inline-flex;align-items:center;gap:8px;background:rgba(248,128,8,.15);border:1px solid rgba(248,128,8,.4);border-radius:100px;padding:5px 14px;font-size:.75rem;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:1rem}
+.batch-banner .b-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.2s infinite}
+
+/* CUMULATIVE LEADERBOARD */
+.cum-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem}
+.cum-title{font-size:1.1rem;font-weight:700;font-family:var(--font-display)}
+.batch-history-row{display:flex;align-items:center;gap:.5rem;padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.82rem}
+.batch-history-row:last-child{border-bottom:none}
+.bh-rank{width:22px;text-align:center;font-weight:700;color:var(--text3);font-size:.72rem}
+.bh-name{flex:1;font-weight:600;color:var(--text)}
+.bh-batch-score{font-size:.75rem;color:var(--text3);font-family:var(--font-mono)}
+.bh-total{font-family:var(--font-mono);font-weight:700;color:var(--accent);font-size:.9rem}
+
+/* NEW BATCH FLOW styles */
+.nb-card{background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,0));border:1px solid var(--border2);border-radius:var(--radius-xl);padding:2rem;max-width:560px;width:100%;box-shadow:var(--shadow-glow),var(--shadow-card);backdrop-filter:blur(8px)}
+.nb-steps{display:flex;flex-direction:column;gap:.75rem;margin:1.25rem 0}
+.nb-step{display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text2)}
+.nb-step .ns-icon{font-size:1.1rem;flex-shrink:0}
+
 /* LANDING */
 #s-landing{align-items:center;justify-content:center;padding:2rem;text-align:center}
 .landing-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(248,128,8,.12),transparent 70%);top:50%;left:50%;transform:translate(-50%,-55%);pointer-events:none}
@@ -442,6 +462,40 @@ create policy "public_all_answers" on answers for all using (true) with check (t
   </div>
 </div>
 
+<!-- QUESTION BANK MODAL -->
+<div class="modal-backdrop" id="bankModal">
+  <div class="modal" style="max-width:620px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
+      <div>
+        <h2 style="font-size:1.4rem;font-weight:700;margin-bottom:.2rem;">📂 Question Bank</h2>
+        <p style="color:var(--text2);font-size:.82rem;">Save your current questions or load a previously saved set.</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeBankModal()">✕ Close</button>
+    </div>
+
+    <!-- Save current set -->
+    <div style="background:rgba(248,128,8,.07);border:1px solid rgba(248,128,8,.25);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;">
+      <div class="section-title" style="margin-bottom:.85rem;">Save Current Questions</div>
+      <div style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;">
+          <label class="field-label">Set Name</label>
+          <input type="text" id="bankSaveName" placeholder="e.g. Tech Trivia Round 1" maxlength="60"/>
+        </div>
+        <button class="btn btn-primary btn-sm" style="white-space:nowrap;" onclick="saveBankSet()">💾 Save</button>
+      </div>
+      <p id="bankSaveHint" style="font-size:.72rem;color:var(--text3);margin-top:.5rem;"></p>
+    </div>
+
+    <!-- Saved sets list -->
+    <div class="section-title" style="margin-bottom:.85rem;">Saved Question Sets</div>
+    <div id="bankList" style="display:flex;flex-direction:column;gap:.65rem;max-height:340px;overflow-y:auto;padding-right:4px;"></div>
+    <div id="bankEmpty" class="empty-state" style="display:none;padding:2rem 1rem;">
+      <div class="icon">🗂️</div>
+      <p>No saved question sets yet. Add questions and save them!</p>
+    </div>
+  </div>
+</div>
+
 <!-- REVEAL MODAL -->
 <div class="modal-backdrop" id="revealModal">
   <div class="modal">
@@ -500,7 +554,7 @@ create policy "public_all_answers" on answers for all using (true) with check (t
 <!-- HOST SETUP -->
 <div class="screen" id="s-host">
   <nav class="host-nav">
-    <div class="logo-mark"><div class="logo-hex">⬡</div><span class="logo-text">OAU Who Gets To Be A Millionaire</span></div>
+    <div class="logo-mark"><div class="logo-hex"><img src="logo.png"></div><span class="logo-text">OAU Who Gets To Be A Millionaire</span></div>
     <button class="btn btn-ghost btn-sm" onclick="navigate('s-landing')">← Back</button>
   </nav>
   <div class="host-body">
@@ -530,7 +584,10 @@ create policy "public_all_answers" on answers for all using (true) with check (t
     <div class="step-panel" id="sp-2">
       <div class="page-h" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
         <div><h2>Build Your Questions</h2><p>Add as many questions as you like.</p></div>
-        <button class="btn btn-primary" onclick="addQuestion()">+ Add Question</button>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="openBankModal()">📂 Question Bank</button>
+          <button class="btn btn-primary" onclick="addQuestion()">+ Add Question</button>
+        </div>
       </div>
       <div id="qEditorList" class="q-editor-list"></div>
       <div id="qEmptyState" class="empty-state card" style="display:none;"><div class="icon">❓</div><p>No questions yet.</p></div>
@@ -620,13 +677,27 @@ create policy "public_all_answers" on answers for all using (true) with check (t
 <!-- PARTICIPANT WAIT -->
 <div class="screen" id="s-pwait">
   <div class="pwait-inner" style="margin:auto;">
-    <div class="pwait-pulse-ring">🎮</div>
-    <h2 class="pwait-name" id="pwaitName">Welcome!</h2>
-    <p class="pwait-status" id="pwaitStatus">Waiting for the host to start…</p>
-    <div class="badge badge-green" id="pwaitCode" style="font-size:.85rem;padding:8px 20px;">SESSION ACTIVE</div>
-    <div style="margin-top:2.5rem;padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);">
-      <p style="font-size:.82rem;color:var(--text3);text-align:center;margin-bottom:.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;">Players Joined</p>
-      <div id="pwaitPlayers" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+    <!-- State A: waiting to play (before quiz starts) -->
+    <div id="pwait-state-join">
+      <div class="pwait-pulse-ring">🎮</div>
+      <h2 class="pwait-name" id="pwaitName">Welcome!</h2>
+      <p class="pwait-status" id="pwaitStatus">Waiting for the host to start…</p>
+      <div class="badge badge-green" id="pwaitCode" style="font-size:.85rem;padding:8px 20px;">SESSION ACTIVE</div>
+      <div style="margin-top:2.5rem;padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);">
+        <p style="font-size:.82rem;color:var(--text3);text-align:center;margin-bottom:.75rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;">Players Joined</p>
+        <div id="pwaitPlayers" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+      </div>
+    </div>
+    <!-- State B: batch done, waiting for final results -->
+    <div id="pwait-state-done" style="display:none;text-align:center;">
+      <div style="font-size:4rem;margin-bottom:1rem;">⏳</div>
+      <h2 style="font-size:1.6rem;font-weight:700;margin-bottom:.5rem;">Your batch is done!</h2>
+      <p style="color:var(--text2);font-size:.9rem;margin-bottom:2rem;">Another group is playing now. Hang tight — the final leaderboard will appear when the host ends the session.</p>
+      <div class="badge badge-warn" style="font-size:.85rem;padding:8px 20px;margin-bottom:2rem;">⌛ Waiting for all batches to finish…</div>
+      <div style="padding:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);">
+        <p style="font-size:.8rem;color:var(--text3);margin-bottom:.5rem;">Your score this batch</p>
+        <div style="font-family:var(--font-mono);font-size:2rem;font-weight:700;color:var(--accent);" id="pwaitMyScore">0</div>
+      </div>
     </div>
   </div>
 </div>
@@ -671,6 +742,7 @@ create policy "public_all_answers" on answers for all using (true) with check (t
     </div>
     <div class="quiz-progress"><div class="quiz-progress-fill" id="qProgress"></div></div>
     <span class="q-label" id="qCounter">Q 1/5</span>
+    <span class="q-label" id="batchIndicator" style="color:var(--accent);display:none;"></span>
     <button class="btn btn-ghost btn-xs" onclick="toggleLiveboard()">📊</button>
   </div>
   <div class="quiz-main">
@@ -703,16 +775,74 @@ create policy "public_all_answers" on answers for all using (true) with check (t
 <div class="screen" id="s-scoreboard">
   <div class="sb-inner" style="padding-top:3rem;">
     <div class="sb-header">
-      <div class="sb-trophy">🏆</div>
-      <h1 class="sb-title">Final Results</h1>
+      <div class="sb-trophy" id="sbTrophy">🏆</div>
+      <h1 class="sb-title" id="sbTitle">Final Results</h1>
       <p class="sb-sub" id="sbQuizName">—</p>
+      <div id="sbBatchBadge" style="display:none;margin:.75rem auto 0;"></div>
     </div>
     <div class="podium" id="podium"></div>
-    <div class="section-title">All Participants</div>
+    <div class="section-title" id="sbListTitle">All Participants</div>
     <div class="sb-list" id="sbList"></div>
-    <div class="sb-actions">
+
+    <!-- Cumulative leaderboard (shown after batch 1+) -->
+    <div id="sbCumulative" style="display:none;margin-top:2rem;">
+      <div class="cum-header">
+        <span class="cum-title">🏅 Running Total — All Batches</span>
+        <span id="sbBatchCount" style="font-size:.78rem;color:var(--text3);"></span>
+      </div>
+      <div id="sbCumList"></div>
+    </div>
+
+    <!-- Host batch actions -->
+    <div class="sb-actions" id="sbHostActions" style="display:none;">
+      <button class="btn btn-secondary" onclick="exportResults()">📥 Export</button>
+      <button class="btn btn-warn btn-lg" onclick="startNewBatch()">➕ New Batch</button>
+      <button class="btn btn-danger btn-sm" onclick="endSession()">🏁 End Session</button>
+    </div>
+    <!-- Participant / non-host actions -->
+    <div class="sb-actions" id="sbParticipantActions">
       <button class="btn btn-secondary" onclick="exportResults()">📥 Export Results</button>
       <button class="btn btn-primary btn-lg" onclick="navigate('s-landing')">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW BATCH LOBBY -->
+<div class="screen" id="s-newbatch">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;z-index:2;">
+    <div class="nb-card">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <div style="font-size:2.5rem;margin-bottom:.5rem;">🔄</div>
+        <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:.3rem;">New Batch</h2>
+        <p style="color:var(--text2);font-size:.88rem;" id="nbBatchLabel">Batch 2 of the session</p>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;text-align:center;">
+        <div style="font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Session code</div>
+        <div style="font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:var(--accent);letter-spacing:.15em;" id="nbSessionCode">—</div>
+      </div>
+      <div class="nb-steps">
+        <div class="nb-step"><span class="ns-icon">📱</span> New participants scan the same QR code to join</div>
+        <div class="nb-step"><span class="ns-icon">✅</span> Their scores will be tracked separately for this batch</div>
+        <div class="nb-step"><span class="ns-icon">🏅</span> Cumulative totals shown on the final leaderboard</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;">
+        <div class="live-dot"></div>
+        <span style="font-family:var(--font-mono);font-size:.82rem;color:var(--text2);"><span id="nbPlayerCount">0</span> players joined for this batch</span>
+      </div>
+      <div class="players-mosaic" id="nbPlayerMosaic" style="min-height:60px;margin-bottom:1.25rem;"></div>
+      <!-- Question set chooser for this batch -->
+      <div style="background:rgba(248,128,8,.07);border:1px solid rgba(248,128,8,.25);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;">
+        <div style="font-size:.72rem;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:.6rem;">📋 Questions for this batch</div>
+        <div style="font-size:.82rem;color:var(--text2);margin-bottom:.75rem;" id="nbQLabel">Using same questions as previous batch (<span id="nbQCount">0</span> questions)</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-xs" onclick="nbLoadFromBank()">📂 Load from Bank</button>
+          <button class="btn btn-ghost btn-xs" onclick="nbGoToEditor()">✏️ Edit Questions</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="navigate('s-qr')">📱 QR Code</button>
+        <button class="btn btn-primary btn-lg" style="flex:1;" onclick="startBatchQuiz()" id="nbStartBtn">Start Batch ⚡</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1015,6 +1145,14 @@ const APP = {
   answeredSet: new Set(),
   qrScanner: null,
   pendingCode: null,
+  /* Multi-batch tracking */
+  batch: {
+    current: 1,
+    history: [],
+    cumulative: {},
+    sessionActive: false,
+    iDonePlaying: false  // participant flag: I've already played my batch
+  }
 };
 
 const EMOJIS  = ['🦁','🦊','🐯','🦅','🐬','🦋','🐲','🦄','🐙','🦎','🦚','🐺','🦝','🦜','🐻','🦩'];
@@ -1035,6 +1173,7 @@ function navigate(id) {
   if (id === 's-scan') setTimeout(startScan, 400);
   else stopScan();
   if (id === 's-lobby') refreshLobby();
+  if (id === 's-newbatch') refreshNewBatchLobby();
   if (id === 's-admin' && document.getElementById('adminDash').style.display !== 'none') refreshAdminDash();
 }
 
@@ -1379,17 +1518,34 @@ function subscribeParticipantChannels(sessionId) {
       filter: `id=eq.${sessionId}`
     }, payload => {
       const sess = payload.new;
-      if (sess.status === 'active' && !APP.session.started) {
+      if (sess.status === 'active' && !APP.session.started && !APP.batch.iDonePlaying) {
         APP.session.started = true;
         APP.session.currentQ = sess.current_q;
         loadQuestionParticipant(sess.current_q);
-      } else if (sess.status === 'active' && APP.session.started && sess.current_q !== APP.session.currentQ) {
+      } else if (sess.status === 'active' && APP.session.started && !APP.batch.iDonePlaying && sess.current_q !== APP.session.currentQ) {
         APP.session.currentQ = sess.current_q;
         APP.questionAnswered = false;
         loadQuestionParticipant(sess.current_q);
-      } else if (sess.status === 'finished') {
+      } else if (sess.status === 'batch_done' && !APP.batch.iDonePlaying) {
+        // Batch ended (normally or early) — load cumulative data from DB then show scores
         APP.session.finished = true;
-        loadFinalScoresParticipant(sessionId);
+        loadFinalScoresParticipant(sessionId, sess.description);
+      } else if (sess.status === 'finished' && !APP.batch.iDonePlaying) {
+        // Session ended before this participant finished a batch (edge case)
+        APP.session.finished = true;
+        loadFinalScoresParticipant(sessionId, sess.description);
+      } else if (sess.status === 'finished' && APP.batch.iDonePlaying) {
+        // Grand final — host ended session, show combined results
+        loadGrandFinalParticipant(sessionId);
+      } else if (sess.status === 'batch_done' && APP.batch.iDonePlaying) {
+        // Already done — stay on wait screen, host will trigger grand final separately
+      } else if (sess.status === 'waiting') {
+        // Host opened a new batch — lock prior participants to the done waiting screen
+        APP.session.started = false;
+        APP.session.currentQ = -1;
+        APP.questionAnswered = false;
+        APP.batch.iDonePlaying = true;
+        showPwaitDoneState();
       }
     })
     .subscribe();
@@ -1551,6 +1707,8 @@ async function joinQuiz() {
   document.getElementById('pwaitName').textContent = `Hey, ${APP.me.emoji} ${APP.me.name}!`;
   document.getElementById('pwaitStatus').textContent = `You've joined "${APP.quiz.title}". Waiting for the host…`;
   document.getElementById('pwaitCode').textContent = 'SESSION: ' + code;
+  APP.batch.iDonePlaying = false; // fresh join — not done yet
+  showPwaitJoinState();
   updatePwaitPlayers();
 
   // Subscribe to session changes
@@ -1607,6 +1765,7 @@ async function startQuiz() {
   }
   APP.session.started = true;
   APP.session.currentQ = 0;
+  APP.batch.sessionActive = true;
 
   if (sbConnected && APP.session.id) {
     await sb.from('sessions').update({ status: 'active', current_q: 0 }).eq('id', APP.session.id);
@@ -1641,6 +1800,15 @@ function loadQuestion(idx) {
   document.getElementById('qProgress').style.width = `${((idx+1)/total)*100}%`;
   document.getElementById('qCatBadge').textContent = APP.quiz.category;
   document.getElementById('qText').textContent = q.text;
+  // Show batch indicator
+  const batchInd = document.getElementById('batchIndicator');
+  if (APP.batch.sessionActive && APP.batch.current > 1) {
+    batchInd.style.display = 'inline';
+    batchInd.textContent = `B${APP.batch.current}`;
+  } else if (APP.batch.sessionActive) {
+    batchInd.style.display = 'inline';
+    batchInd.textContent = 'B1';
+  }
 
   const optContainer = document.getElementById('qOptions');
   optContainer.innerHTML = q.options.map((opt, i) => `
@@ -1897,8 +2065,34 @@ async function endQuiz() {
   APP.session.finished = true;
   APP.session.started = false;
 
+  // Record this batch in history first
+  const batchPlayers = APP.session.players.map(p => ({
+    name: p.name, emoji: p.emoji, color: p.color, score: p.score
+  }));
+  APP.batch.history.push({ batchNum: APP.batch.current, players: batchPlayers });
+
+  // Merge into cumulative totals (keyed by name)
+  batchPlayers.forEach(p => {
+    if (!APP.batch.cumulative[p.name]) {
+      APP.batch.cumulative[p.name] = { emoji: p.emoji, color: p.color, total: 0, batches: [] };
+    }
+    APP.batch.cumulative[p.name].total += p.score;
+    APP.batch.cumulative[p.name].batches.push(p.score);
+  });
+
+  // Push 'batch_done' so participants know this batch ended and can show scores.
+  // Store cumulative JSON in description field so participants can read it back.
   if (sbConnected && APP.session.id) {
-    await sb.from('sessions').update({ status: 'finished' }).eq('id', APP.session.id);
+    const cumulativeSnapshot = JSON.stringify({
+      cumulative: APP.batch.cumulative,
+      history: APP.batch.history,
+      batchNum: APP.batch.current
+    });
+    await sb.from('sessions').update({
+      status: 'batch_done',
+      current_q: -1,
+      description: cumulativeSnapshot
+    }).eq('id', APP.session.id);
   }
 
   buildScoreboard(APP.session.players, APP.quiz.title);
@@ -1906,13 +2100,52 @@ async function endQuiz() {
   if (APP.session.players.length > 0) confetti();
 }
 
-async function loadFinalScoresParticipant(sessionId) {
+async function loadFinalScoresParticipant(sessionId, cumulativeJson) {
+  // Apply cumulative data from host (stored in session.description) so participant
+  // scoreboard shows batch results and running totals correctly
+  if (cumulativeJson) {
+    try {
+      const snap = JSON.parse(cumulativeJson);
+      if (snap.cumulative) APP.batch.cumulative = snap.cumulative;
+      if (snap.history)    APP.batch.history    = snap.history;
+      if (snap.batchNum)   APP.batch.current    = snap.batchNum;
+      APP.batch.sessionActive = true;
+    } catch(e) { console.warn('Could not parse cumulative snapshot', e); }
+  }
+
+  // Fetch this batch's player scores from DB
   let players = APP.session.players;
   if (sbConnected) {
     const { data } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
     if (data) players = data.map(dbPlayerToLocal);
   }
+
+  // Mark them as done — they've played their batch
+  APP.batch.iDonePlaying = true;
+  const myScore = APP.me ? (players.find(p => p.id === APP.me.id)?.score || APP.me.score || 0) : 0;
   buildScoreboard(players, APP.quiz.title);
+  navigate('s-scoreboard');
+  confetti();
+  // After 12 seconds auto-transition to "waiting for grand final" screen
+  setTimeout(() => {
+    if (APP.batch.iDonePlaying && APP.currentScreen === 's-scoreboard') {
+      showPwaitDoneState(myScore);
+      navigate('s-pwait');
+    }
+  }, 12000);
+}
+
+async function loadGrandFinalParticipant(sessionId) {
+  // Host ended the session — show all-batch combined leaderboard
+  // We don't have cumulative data on participant devices, so fetch all players
+  // and show them sorted. In a full implementation you would store cumulative in DB.
+  // For now, show a grand final screen with what we have.
+  let players = APP.session.players;
+  if (sbConnected) {
+    const { data } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
+    if (data) players = data.map(dbPlayerToLocal);
+  }
+  buildScoreboardGrandFinal(players, APP.quiz.title + ' — Grand Final');
   navigate('s-scoreboard');
   confetti();
 }
@@ -1920,13 +2153,32 @@ async function loadFinalScoresParticipant(sessionId) {
 function buildScoreboard(players, title) {
   const sorted = [...players].sort((a,b) => b.score - a.score);
   const maxScore = sorted[0]?.score || 1;
+  const isHost = APP.role === 'host';
+  const batchNum = APP.batch.current;
+  const totalBatches = APP.batch.history.length;
+
   document.getElementById('sbQuizName').textContent = title;
+
+  // Batch badge
+  const badgeEl = document.getElementById('sbBatchBadge');
+  if (APP.batch.sessionActive) {
+    badgeEl.style.display = 'block';
+    badgeEl.innerHTML = `<span class="batch-banner"><span class="b-dot"></span>Batch ${batchNum} Results</span>`;
+    document.getElementById('sbTitle').textContent = `Batch ${batchNum} — Results`;
+    document.getElementById('sbListTitle').textContent = `Batch ${batchNum} Participants`;
+  } else {
+    badgeEl.style.display = 'none';
+    document.getElementById('sbTitle').textContent = 'Final Results';
+    document.getElementById('sbListTitle').textContent = 'All Participants';
+  }
+
   const [p1,p2,p3] = sorted;
   document.getElementById('podium').innerHTML = `
     ${p2 ? `<div class="podium-slot p2"><div style="width:50px;height:50px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:${p2.color}22;border:2px solid ${p2.color}55;">${p2.emoji}</div><div class="podium-name">${p2.name}</div><div class="podium-score">${p2.score.toLocaleString()}</div><div class="podium-block">🥈</div></div>` : ''}
     ${p1 ? `<div class="podium-slot p1"><div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:${p1.color}22;border:2px solid ${p1.color}88;box-shadow:0 0 20px ${p1.color}44;">${p1.emoji}</div><div class="podium-name" style="font-size:.95rem;">${p1.name}</div><div class="podium-score" style="font-size:1rem;">${p1.score.toLocaleString()}</div><div class="podium-block">🥇</div></div>` : ''}
     ${p3 ? `<div class="podium-slot p3"><div style="width:46px;height:46px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:${p3.color}22;border:2px solid ${p3.color}44;">${p3.emoji}</div><div class="podium-name">${p3.name}</div><div class="podium-score">${p3.score.toLocaleString()}</div><div class="podium-block">🥉</div></div>` : ''}
   `;
+
   document.getElementById('sbList').innerHTML = sorted.map((p,i) => `
     <div class="sb-row" style="animation-delay:${i*.06}s">
       <div class="sb-pos">${i+1}</div>
@@ -1935,14 +2187,64 @@ function buildScoreboard(players, title) {
       <div class="sb-bar-wrap"><div class="sb-bar-fill" style="width:${Math.round((p.score/maxScore)*100)}%"></div></div>
       <div class="sb-score">${p.score.toLocaleString()}</div>
     </div>`).join('');
+
+  // Cumulative leaderboard (visible from batch 2+ or if there's history)
+  const cumEl = document.getElementById('sbCumulative');
+  const cumData = APP.batch.cumulative;
+  const cumKeys = Object.keys(cumData);
+  if (cumKeys.length > 0) {
+    cumEl.style.display = 'block';
+    const cumSorted = cumKeys.map(name => ({ name, ...cumData[name] })).sort((a,b) => b.total - a.total);
+    const cumMax = cumSorted[0]?.total || 1;
+    document.getElementById('sbBatchCount').textContent = `${totalBatches} batch${totalBatches>1?'es':''} completed`;
+    document.getElementById('sbCumList').innerHTML = cumSorted.map((p,i) => `
+      <div class="batch-history-row" style="animation-delay:${i*.05}s">
+        <span class="bh-rank">${i+1}</span>
+        <span style="font-size:1.1rem;flex-shrink:0;">${p.emoji}</span>
+        <span class="bh-name">${p.name}</span>
+        <span class="bh-batch-score">[${p.batches.map(s=>s.toLocaleString()).join(' + ')}]</span>
+        <span class="bh-total">${p.total.toLocaleString()}</span>
+      </div>`).join('');
+  } else {
+    cumEl.style.display = 'none';
+  }
+
+  // Show correct action buttons — dynamically update New Batch button
+  const hostActions = document.getElementById('sbHostActions');
+  const partActions = document.getElementById('sbParticipantActions');
+  if (isHost) {
+    hostActions.style.display = 'flex';
+    partActions.style.display = 'none';
+    hostActions.innerHTML = `
+      <button class="btn btn-secondary" onclick="exportResults()">📥 Export</button>
+      <button class="btn btn-warn btn-lg" onclick="startNewBatch()">➕ New Batch</button>
+      <button class="btn btn-danger btn-sm" onclick="endSession()">🏁 End Session</button>
+    `;
+  } else {
+    hostActions.style.display = 'none';
+    partActions.style.display = 'flex';
+  }
 }
 
 function exportResults() {
-  const sorted = [...APP.session.players].sort((a,b) => b.score - a.score);
-  const csv = ['Rank,Name,Score', ...sorted.map((p,i) => `${i+1},${p.name},${p.score}`)].join('\n');
+  const cumData = APP.batch.cumulative;
+  const hasCum = Object.keys(cumData).length > 0;
+  let csv, filename;
+  if (hasCum) {
+    const batchHeaders = APP.batch.history.map(b => 'Batch ' + b.batchNum);
+    const cumSorted = Object.keys(cumData).map(name => ({name, ...cumData[name]})).sort((a,b) => b.total - a.total);
+    csv = ['Rank,Name,' + batchHeaders.join(',') + ',Total', ...cumSorted.map((p,i) => {
+      return (i+1) + ',' + p.name + ',' + p.batches.join(',') + ',' + p.total;
+    })].join('\n');
+    filename = APP.quiz.title.replace(/\s+/g,'_') + '_cumulative_results.csv';
+  } else {
+    const sorted = [...APP.session.players].sort((a,b) => b.score - a.score);
+    csv = ['Rank,Name,Score', ...sorted.map((p,i) => (i+1)+','+p.name+','+p.score)].join('\n');
+    filename = APP.quiz.title.replace(/\s+/g,'_') + '_results.csv';
+  }
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = `${APP.quiz.title.replace(/\s+/g,'_')}_results.csv`;
+  a.download = filename;
   a.click();
   toast('Results exported!', 'success');
 }
@@ -2037,13 +2339,721 @@ function saveAdminSettings() {
 })();
 
 /* ═══════════════════════════════════════════════════
+   QUESTION BANK — save/load named question sets
+═══════════════════════════════════════════════════ */
+const BANK_KEY = 'uog_question_bank';
+
+function loadBankData() {
+  try { return JSON.parse(localStorage.getItem(BANK_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveBankData(data) {
+  try { localStorage.setItem(BANK_KEY, JSON.stringify(data)); } catch(e) { toast('Storage error — could not save.', 'error'); }
+}
+
+function openBankModal() {
+  const hint = document.getElementById('bankSaveHint');
+  const qs = collectQuestions();
+  hint.textContent = qs.length > 0
+    ? `${qs.length} question${qs.length>1?'s':''} in editor will be saved.`
+    : 'No questions in the editor yet — you can still load a saved set below.';
+  document.getElementById('bankSaveName').value = document.getElementById('quizTitle')?.value?.trim() || '';
+  renderBankList();
+  document.getElementById('bankModal').classList.add('open');
+}
+
+function closeBankModal() {
+  document.getElementById('bankModal').classList.remove('open');
+  _bankOpenedFromBatch = false; // reset flag in case user dismissed without picking
+}
+
+function saveBankSet() {
+  const name = document.getElementById('bankSaveName').value.trim();
+  if (!name) { toast('Give this set a name first!', 'error'); return; }
+  const qs = collectQuestions();
+  if (qs.length === 0) { toast('No questions to save — add some questions first.', 'warn'); return; }
+
+  const bank = loadBankData();
+  const existing = bank.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+  const entry = { name, questions: qs, savedAt: Date.now() };
+  if (existing >= 0) {
+    bank[existing] = entry;
+    toast(`Updated "${name}"!`, 'success');
+  } else {
+    bank.unshift(entry);
+    toast(`Saved "${name}" (${qs.length} questions)!`, 'success');
+  }
+  saveBankData(bank);
+  document.getElementById('bankSaveName').value = '';
+  document.getElementById('bankSaveHint').textContent = '';
+  renderBankList();
+}
+
+function renderBankList() {
+  const bank = loadBankData();
+  const list = document.getElementById('bankList');
+  const empty = document.getElementById('bankEmpty');
+  if (bank.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = bank.map((set, idx) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+      <div style="flex:1;min-width:140px;">
+        <div style="font-weight:600;font-size:.92rem;margin-bottom:2px;">${escHtml(set.name)}</div>
+        <div style="font-size:.73rem;color:var(--text3);">${set.questions.length} question${set.questions.length>1?'s':''} · saved ${formatBankDate(set.savedAt)}</div>
+      </div>
+      <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-xs" onclick="previewBankSet(${idx})">👁 Preview</button>
+        <button class="btn btn-primary btn-xs" onclick="loadBankSet(${idx})">⬆ Load</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteBankSet(${idx})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatBankDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' });
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Flag: true when bank is opened from the new-batch screen (not the setup editor)
+let _bankOpenedFromBatch = false;
+
+function loadBankSet(idx) {
+  const bank = loadBankData();
+  const set = bank[idx];
+  if (!set) return;
+
+  // ── NEW BATCH MODE: apply questions directly to APP.quiz and return ──
+  if (_bankOpenedFromBatch) {
+    if (!confirm(`Load "${set.name}" (${set.questions.length} questions) for Batch ${APP.batch.current}?`)) return;
+    APP.quiz.questions = set.questions.map(q => ({
+      text: q.text,
+      options: [...q.options],
+      correct: q.correct,
+      timeOverride: q.timeOverride || null
+    }));
+    closeBankModal();
+    _bankOpenedFromBatch = false;
+    // Update the count badge on the new-batch screen
+    document.getElementById('nbQCount').textContent = APP.quiz.questions.length;
+    const lbl = document.getElementById('nbQLabel');
+    if (lbl) lbl.innerHTML = `<strong style="color:var(--accent)">${set.name}</strong> — <span id="nbQCount">${APP.quiz.questions.length}</span> questions loaded`;
+    toast(`✅ "${set.name}" loaded — ${APP.quiz.questions.length} questions ready for Batch ${APP.batch.current}!`, 'success', 4000);
+    return;
+  }
+
+  // ── EDITOR MODE: populate the question editor UI as before ──
+  const existing = collectQuestions();
+  const msg = existing.length > 0
+    ? `Replace the ${existing.length} current question(s) with "${set.name}" (${set.questions.length} questions)?`
+    : `Load "${set.name}" (${set.questions.length} questions) into the editor?`;
+  if (!confirm(msg)) return;
+
+  // Clear current editor
+  document.getElementById('qEditorList').innerHTML = '';
+  qIdCounter = 0;
+
+  // Populate editor with saved questions
+  set.questions.forEach(q => {
+    qIdCounter++;
+    const id = qIdCounter;
+    document.getElementById('qEmptyState').style.display = 'none';
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${id}`;
+    card.dataset.qid = id;
+    card.innerHTML = `
+      <div class="q-card-head" onclick="toggleQCard(${id})">
+        <div class="q-card-head-left">
+          <span class="q-num-badge">Q?</span>
+          <span class="q-preview-text" id="qprev-${id}">${escHtml(q.text || 'New question…')}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:.9rem;color:var(--text3);" id="qtoggle-${id}">▲</span>
+          <button class="btn btn-danger btn-xs" onclick="removeQuestion(event,${id})">✕ Remove</button>
+        </div>
+      </div>
+      <div class="q-card-body">
+        <div class="form-group">
+          <label class="field-label">Question *</label>
+          <input type="text" id="qtext-${id}" placeholder="Type your question here…" value="${escHtml(q.text||'')}" oninput="updateQPreview(${id})"/>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Answer Options (select the correct one)</label>
+          <div class="options-grid2" id="opts-${id}">
+            ${['A','B','C','D'].map((l,i) => `
+              <div class="opt-row" id="optrow-${id}-${i}" ${i===q.correct?'class="opt-row is-correct"':''}>
+                <div class="opt-letter-badge">${l}</div>
+                <input type="text" id="opt-${id}-${i}" placeholder="Option ${l}" value="${escHtml(q.options?.[i]||'')}"/>
+                <input type="radio" class="correct-radio" name="correct-${id}" value="${i}" title="Mark as correct" ${i===q.correct?'checked':''} onchange="markCorrectOpt(${id},${i})"/>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:.78rem;color:var(--text3);">⏱ Time override:</span>
+          <input type="number" id="qtime-${id}" placeholder="Default" min="5" max="120" style="width:100px;padding:6px 10px;font-size:.82rem;" value="${q.timeOverride||''}"/>
+          <span style="font-size:.75rem;color:var(--text3);">sec</span>
+        </div>
+      </div>`;
+    document.getElementById('qEditorList').appendChild(card);
+  });
+
+  // Also sync APP.quiz.questions so the data is live immediately
+  APP.quiz.questions = set.questions.map(q => ({
+    text: q.text,
+    options: [...q.options],
+    correct: q.correct,
+    timeOverride: q.timeOverride || null
+  }));
+
+  renumberQuestions();
+  renderQEditorEmpty();
+  closeBankModal();
+  toast(`Loaded "${set.name}" — ${set.questions.length} questions ready!`, 'success');
+}
+
+function previewBankSet(idx) {
+  const bank = loadBankData();
+  const set = bank[idx];
+  if (!set) return;
+  const lines = set.questions.map((q,i) =>
+    `Q${i+1}: ${q.text}\n  ✓ ${q.options?.[q.correct]||'?'} | Options: ${(q.options||[]).join(' / ')}`
+  ).join('\n\n');
+  alert(`📋 "${set.name}" — ${set.questions.length} questions\n\n${lines}`);
+}
+
+function deleteBankSet(idx) {
+  const bank = loadBankData();
+  const set = bank[idx];
+  if (!set) return;
+  if (!confirm(`Delete "${set.name}"? This cannot be undone.`)) return;
+  bank.splice(idx, 1);
+  saveBankData(bank);
+  renderBankList();
+  toast(`Deleted "${set.name}"`, 'info');
+}
+
+/* ═══════════════════════════════════════════════════
+   MULTI-BATCH FLOW
+═══════════════════════════════════════════════════ */
+
+function startNewBatch() {
+  APP.batch.current++;
+  // Clear local player list for the new batch (history already saved in endQuiz)
+  APP.session.players = [];
+  APP.session.started = false;
+  APP.session.finished = false;
+  APP.session.currentQ = -1;
+  APP.answeredSet = new Set();
+  APP.questionAnswered = false;
+  // Remove previous batch players from DB and reset status to 'waiting' for new joiners
+  if (sbConnected && APP.session.id) {
+    sb.from('players').delete().eq('session_id', APP.session.id).then(() => {});
+    sb.from('sessions').update({ status: 'waiting', current_q: -1 }).eq('id', APP.session.id).then(() => {});
+  }
+  navigate('s-newbatch');
+  toast(`Batch ${APP.batch.current} ready — waiting for players!`, 'success');
+}
+
+/* refreshNewBatchLobby is defined in the helper section above */
+
+function updateNewBatchPlayers() {
+  const count = APP.session.players.length;
+  document.getElementById('nbPlayerCount').textContent = count;
+  const mosaic = document.getElementById('nbPlayerMosaic');
+  if (!mosaic) return;
+  if (count === 0) {
+    mosaic.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:1rem;color:var(--text3);font-size:.85rem;">👀 Waiting for players to scan the QR…</div>`;
+    return;
+  }
+  mosaic.innerHTML = APP.session.players.map(p => `
+    <div class="player-tile">
+      <div class="ptile-avatar" style="background:${p.color}22;border-color:${p.color}55;">${p.emoji}</div>
+      <div class="ptile-name">${p.name}</div>
+    </div>
+  `).join('');
+}
+
+async function startBatchQuiz() {
+  if (APP.session.players.length === 0) {
+    toast('Add some players first! Adding demo bots…', 'warn');
+    addBotPlayers();
+    refreshNewBatchLobby();
+    return;
+  }
+  APP.session.started = true;
+  APP.session.currentQ = 0;
+  if (sbConnected && APP.session.id) {
+    await sb.from('sessions').update({ status: 'active', current_q: 0 }).eq('id', APP.session.id);
+  }
+  loadQuestion(0);
+}
+
+async function endSession() {
+  if (!confirm('End the entire session? This will show the Grand Final leaderboard to all participants.')) return;
+
+  // Push 'finished' to DB so all waiting participants see the grand final
+  if (sbConnected && APP.session.id) {
+    await sb.from('sessions').update({ status: 'finished' }).eq('id', APP.session.id);
+  }
+
+  showGrandFinal();
+}
+
+function showGrandFinal() {
+  // Build merged leaderboard from ALL batches' cumulative data
+  const cumData = APP.batch.cumulative;
+  const allPlayers = Object.keys(cumData).map(name => ({
+    name, emoji: cumData[name].emoji, color: cumData[name].color,
+    score: cumData[name].total, roundPts: 0, answered: false
+  }));
+
+  // Temporarily flag as grand final so buildScoreboard renders correctly
+  const prevBatch = APP.batch.current;
+  const prevSessionActive = APP.batch.sessionActive;
+  APP.batch.sessionActive = false; // hides "Batch X Results" badge — this is the grand final
+
+  buildScoreboardGrandFinal(allPlayers, APP.quiz.title + ' — Grand Final');
+  navigate('s-scoreboard');
+  confetti();
+  toast('Grand Final! All batches combined.', 'success', 5000);
+}
+
+/* ═══════════════════════════════════════════════════
+   PWAIT STATE HELPERS
+═══════════════════════════════════════════════════ */
+function showPwaitJoinState() {
+  document.getElementById('pwait-state-join').style.display = 'block';
+  document.getElementById('pwait-state-done').style.display = 'none';
+}
+
+function showPwaitDoneState(myScore) {
+  document.getElementById('pwait-state-join').style.display = 'none';
+  document.getElementById('pwait-state-done').style.display = 'block';
+  if (myScore !== undefined) {
+    document.getElementById('pwaitMyScore').textContent = myScore.toLocaleString();
+  } else if (APP.me) {
+    document.getElementById('pwaitMyScore').textContent = (APP.me.score || 0).toLocaleString();
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   GRAND FINAL SCOREBOARD (all batches combined)
+═══════════════════════════════════════════════════ */
+function buildScoreboardGrandFinal(players, title) {
+  const sorted = [...players].sort((a,b) => b.score - a.score);
+  const maxScore = sorted[0]?.score || 1;
+
+  document.getElementById('sbQuizName').textContent = title;
+  document.getElementById('sbTitle').textContent = '🏆 Grand Final';
+  document.getElementById('sbListTitle').textContent = 'All Participants — Combined Rankings';
+
+  const badgeEl = document.getElementById('sbBatchBadge');
+  badgeEl.style.display = 'block';
+  const batchCount = APP.batch.history.length || 1;
+  badgeEl.innerHTML = `<span class="batch-banner" style="background:rgba(248,128,8,.25);"><span class="b-dot"></span>${batchCount} Batch${batchCount>1?'es':''} Combined</span>`;
+
+  const [p1,p2,p3] = sorted;
+  document.getElementById('podium').innerHTML = `
+    ${p2 ? `<div class="podium-slot p2"><div style="width:50px;height:50px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:${p2.color}22;border:2px solid ${p2.color}55;">${p2.emoji}</div><div class="podium-name">${p2.name}</div><div class="podium-score">${p2.score.toLocaleString()}</div><div class="podium-block">🥈</div></div>` : ''}
+    ${p1 ? `<div class="podium-slot p1"><div style="width:64px;height:64px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:${p1.color}22;border:2px solid ${p1.color}88;box-shadow:0 0 20px ${p1.color}44;">${p1.emoji}</div><div class="podium-name" style="font-size:.95rem;">${p1.name}</div><div class="podium-score" style="font-size:1rem;">${p1.score.toLocaleString()}</div><div class="podium-block">🥇</div></div>` : ''}
+    ${p3 ? `<div class="podium-slot p3"><div style="width:46px;height:46px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:${p3.color}22;border:2px solid ${p3.color}44;">${p3.emoji}</div><div class="podium-name">${p3.name}</div><div class="podium-score">${p3.score.toLocaleString()}</div><div class="podium-block">🥉</div></div>` : ''}
+  `;
+
+  document.getElementById('sbList').innerHTML = sorted.map((p,i) => `
+    <div class="sb-row" style="animation-delay:${i*.06}s">
+      <div class="sb-pos">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="sb-avatar" style="background:${p.color}22;border:1px solid ${p.color}55;">${p.emoji}</div>
+      <div class="sb-name">${p.name}</div>
+      <div class="sb-bar-wrap"><div class="sb-bar-fill" style="width:${Math.round((p.score/maxScore)*100)}%"></div></div>
+      <div class="sb-score">${p.score.toLocaleString()}</div>
+    </div>`).join('');
+
+  // Hide cumulative section (we ARE the cumulative)
+  document.getElementById('sbCumulative').style.display = 'none';
+
+  // Show actions
+  const isHost = APP.role === 'host';
+  document.getElementById('sbHostActions').style.display = isHost ? 'flex' : 'none';
+  document.getElementById('sbParticipantActions').style.display = isHost ? 'none' : 'flex';
+  // On grand final, hide "New Batch" button — only export and home
+  if (isHost) {
+    document.getElementById('sbHostActions').innerHTML = `
+      <button class="btn btn-secondary" onclick="exportResults()">📥 Export Grand Final</button>
+      <button class="btn btn-primary btn-lg" onclick="resetAndGoHome()">🏠 Done</button>
+    `;
+  }
+}
+
+function resetAndGoHome() {
+  // Fully wipe session state so the next "Host a Quiz" starts completely fresh
+  clearInterval(APP.timerInterval);
+  if (typeof playersChannel !== 'undefined' && playersChannel) { try { playersChannel.unsubscribe(); } catch(e){} playersChannel = null; }
+  if (typeof sessionChannel !== 'undefined' && sessionChannel) { try { sessionChannel.unsubscribe(); } catch(e){} sessionChannel = null; }
+  if (typeof answersChannel !== 'undefined' && answersChannel) { try { answersChannel.unsubscribe(); } catch(e){} answersChannel = null; }
+
+  APP.role = null;
+  APP.quiz = { title:'', description:'', timePerQ:30, maxPts:1000, category:'General Knowledge', questions:[] };
+  APP.session = { id: null, code: '', players: [], currentQ: -1, started: false, finished: false };
+  APP.me = null;
+  APP.timerInterval = null;
+  APP.timeLeft = 30;
+  APP.questionAnswered = false;
+  APP.answeredSet = new Set();
+  APP.pendingCode = null;
+  APP.batch = { current: 1, history: [], cumulative: {}, sessionActive: false, iDonePlaying: false };
+
+  // Clear the question editor so it doesn't inherit old questions
+  const editorList = document.getElementById('qEditorList');
+  if (editorList) editorList.innerHTML = '';
+  qIdCounter = 0;
+
+  navigate('s-landing');
+}
+
+/* ═══════════════════════════════════════════════════
+   NEW BATCH — QUESTION MANAGEMENT
+═══════════════════════════════════════════════════ */
+function refreshNewBatchLobby() {
+  document.getElementById('nbBatchLabel').textContent = `Batch ${APP.batch.current} of the session`;
+  document.getElementById('nbSessionCode').textContent = APP.session.code || '—';
+  document.getElementById('nbQCount').textContent = APP.quiz.questions.length;
+  updateNewBatchPlayers();
+}
+
+function nbLoadFromBank() {
+  // Set flag so loadBankSet applies directly to APP.quiz.questions (not the editor UI)
+  _bankOpenedFromBatch = true;
+  openBankModal();
+  toast('Select a question set for Batch ' + APP.batch.current, 'info', 3000);
+}
+
+function nbGoToEditor() {
+  // Open the inline batch question editor modal (stays within the session)
+  openBatchQuestionEditor();
+}
+
+/* ── Inline question editor for mid-session batch editing ── */
+function openBatchQuestionEditor() {
+  // Build or reuse the modal
+  let modal = document.getElementById('batchEditModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'batchEditModal';
+    modal.className = 'modal-backdrop open';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:680px;width:100%;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+          <div>
+            <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:.2rem;">✏️ Edit Questions — Batch <span id="beModalBatchNum"></span></h2>
+            <p style="color:var(--text2);font-size:.82rem;">Edit inline. When done, click Apply & Return to save to this batch.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="closeBatchQuestionEditor()">✕ Cancel</button>
+        </div>
+        <div id="beList" style="display:flex;flex-direction:column;gap:.75rem;max-height:55vh;overflow-y:auto;padding-right:4px;margin-bottom:1.25rem;"></div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="beAddQuestion()">+ Add Question</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="applyBatchEditorQuestions()">✅ Apply & Return to Batch</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('beModalBatchNum').textContent = APP.batch.current;
+  renderBatchEditorList();
+  document.getElementById('batchEditModal').classList.add('open');
+  document.getElementById('batchEditModal').style.display = 'flex';
+}
+
+function closeBatchQuestionEditor() {
+  const modal = document.getElementById('batchEditModal');
+  if (modal) { modal.style.display = 'none'; modal.classList.remove('open'); }
+}
+
+let beIdCounter = 0;
+function renderBatchEditorList() {
+  beIdCounter = 0;
+  const list = document.getElementById('beList');
+  list.innerHTML = '';
+  const qs = APP.quiz.questions.length > 0 ? APP.quiz.questions : [];
+  qs.forEach(q => beAddQuestion(q));
+  if (qs.length === 0) beAddQuestion();
+}
+
+function beAddQuestion(q) {
+  beIdCounter++;
+  const id = 'be' + beIdCounter;
+  const list = document.getElementById('beList');
+  const card = document.createElement('div');
+  card.id = `becard-${id}`;
+  card.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;';
+  const qText = q?.text || '';
+  const opts = q?.options || ['','','',''];
+  const correct = q?.correct ?? 0;
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;">
+      <span style="font-size:.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">Question ${beIdCounter}</span>
+      <button class="btn btn-danger btn-xs" onclick="document.getElementById('becard-${id}').remove();renumberBeCards()">✕</button>
+    </div>
+    <input type="text" id="beq-${id}" placeholder="Question text…" value="${escHtml(qText)}" style="margin-bottom:.6rem;font-size:.88rem;"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      ${['A','B','C','D'].map((l,i) => `
+        <div style="display:flex;align-items:center;gap:5px;">
+          <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--text3);flex-shrink:0;">${l}</div>
+          <input type="text" id="beopt-${id}-${i}" placeholder="Option ${l}" value="${escHtml(opts[i]||'')}" style="font-size:.82rem;padding:7px 10px;"/>
+          <input type="radio" name="becorrect-${id}" value="${i}" title="Correct" ${i===correct?'checked':''} style="accent-color:var(--accent);flex-shrink:0;cursor:pointer;"/>
+        </div>
+      `).join('')}
+    </div>`;
+  list.appendChild(card);
+}
+
+function renumberBeCards() {
+  document.querySelectorAll('#beList > div').forEach((card, i) => {
+    const lbl = card.querySelector('span');
+    if (lbl) lbl.textContent = 'Question ' + (i + 1);
+  });
+}
+
+function applyBatchEditorQuestions() {
+  const cards = document.querySelectorAll('#beList > div[id^="becard-"]');
+  const newQs = [];
+  cards.forEach(card => {
+    const id = card.id.replace('becard-', '');
+    const text = document.getElementById(`beq-${id}`)?.value?.trim();
+    if (!text) return;
+    const options = ['A','B','C','D'].map((_,i) => document.getElementById(`beopt-${id}-${i}`)?.value?.trim()).filter(Boolean);
+    const correctRadio = card.querySelector(`input[name="becorrect-${id}"]:checked`);
+    const correct = correctRadio ? parseInt(correctRadio.value) : 0;
+    newQs.push({ text, options, correct, timeOverride: null });
+  });
+  if (newQs.length === 0) { toast('Add at least one question!', 'error'); return; }
+  APP.quiz.questions = newQs;
+  closeBatchQuestionEditor();
+  document.getElementById('nbQCount').textContent = newQs.length;
+  const lbl = document.getElementById('nbQLabel');
+  if (lbl) lbl.innerHTML = `<strong style="color:var(--accent);">Custom questions</strong> — <span id="nbQCount">${newQs.length}</span> questions set for Batch ${APP.batch.current}`;
+  toast(`✅ ${newQs.length} questions applied for Batch ${APP.batch.current}!`, 'success', 4000);
+}
+
+/* ═══════════════════════════════════════════════════
    POLL for demo mode
 ═══════════════════════════════════════════════════ */
 setInterval(() => {
   if (APP.currentScreen === 's-pwait') updatePwaitPlayers();
   if (APP.currentScreen === 's-lobby') refreshLobby();
+  if (APP.currentScreen === 's-newbatch') { updateNewBatchPlayers(); document.getElementById('nbQCount').textContent = APP.quiz.questions.length; }
   if (APP.currentScreen === 's-quiz') { updateLiveboard(); updateAnswerMeter(); }
 }, 2000);
+
+/* ═══════════════════════════════════════════════════
+   PRE-SEEDED QUESTION BANK — 5 Batches × 30 Questions
+   Auto-loaded on first visit (does not overwrite existing saved sets)
+═══════════════════════════════════════════════════ */
+(function seedQuestionBank() {
+  const SEED_KEY = 'uog_bank_seeded_v1';
+  if (localStorage.getItem(SEED_KEY)) return; // already seeded — don't overwrite
+
+  const batches = [
+    {
+      name: "Batch 1 — Mix (General Knowledge, Science & Tech, History)",
+      questions: [
+        { text: "Which element has the chemical symbol 'Au'?", options: ["Silver", "Gold", "Aluminium", "Argon"], correct: 1 },
+        { text: "What is the powerhouse of the cell?", options: ["Nucleus", "Ribosome", "Mitochondria", "Golgi apparatus"], correct: 2 },
+        { text: "Which country was the first to grant women the right to vote?", options: ["Australia", "United Kingdom", "New Zealand", "United States"], correct: 2 },
+        { text: "In what year did the Berlin Wall fall?", options: ["1987", "1991", "1989", "1993"], correct: 2 },
+        { text: "What does 'HTTP' stand for?", options: ["HyperText Transfer Protocol", "High-Traffic Text Protocol", "HyperText Transmission Process", "Hybrid Text Transfer Protocol"], correct: 0 },
+        { text: "The Scramble for Africa primarily took place in which century?", options: ["17th", "18th", "19th", "20th"], correct: 2 },
+        { text: "Which planet has the most moons in our solar system?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], correct: 1 },
+        { text: "Who invented the World Wide Web?", options: ["Bill Gates", "Steve Jobs", "Tim Berners-Lee", "Vint Cerf"], correct: 2 },
+        { text: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Brisbane", "Canberra"], correct: 3 },
+        { text: "In chemistry, what is the pH of pure water?", options: ["5", "6", "7", "8"], correct: 2 },
+        { text: "Which ancient wonder was located in Alexandria, Egypt?", options: ["Colossus of Rhodes", "Hanging Gardens", "Lighthouse of Alexandria", "Temple of Artemis"], correct: 2 },
+        { text: "What programming language was created by Guido van Rossum?", options: ["Ruby", "Python", "Perl", "Java"], correct: 1 },
+        { text: "The Treaty of Versailles ended which war?", options: ["World War II", "World War I", "Franco-Prussian War", "Crimean War"], correct: 1 },
+        { text: "What is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], correct: 3 },
+        { text: "How many bones are in the adult human body?", options: ["196", "206", "216", "226"], correct: 1 },
+        { text: "Which company developed the Android operating system?", options: ["Apple", "Microsoft", "Google", "Samsung"], correct: 2 },
+        { text: "What year did Nigeria gain independence from Britain?", options: ["1957", "1960", "1963", "1965"], correct: 1 },
+        { text: "What is the speed of light in a vacuum (approximately)?", options: ["200,000 km/s", "300,000 km/s", "400,000 km/s", "150,000 km/s"], correct: 1 },
+        { text: "Which African country has the largest economy by GDP?", options: ["South Africa", "Egypt", "Nigeria", "Ethiopia"], correct: 2 },
+        { text: "What does RAM stand for in computing?", options: ["Rapid Access Memory", "Random Access Memory", "Read-Access Module", "Registered Array Memory"], correct: 1 },
+        { text: "The Magna Carta was signed in which year?", options: ["1066", "1215", "1348", "1492"], correct: 1 },
+        { text: "Which gas do plants absorb during photosynthesis?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], correct: 2 },
+        { text: "What is the capital city of Canada?", options: ["Toronto", "Vancouver", "Montreal", "Ottawa"], correct: 3 },
+        { text: "Which scientist proposed the theory of general relativity?", options: ["Isaac Newton", "Niels Bohr", "Albert Einstein", "Max Planck"], correct: 2 },
+        { text: "What is the longest river in Africa?", options: ["Congo", "Niger", "Zambezi", "Nile"], correct: 3 },
+        { text: "The Great Wall of China was primarily built during which dynasty?", options: ["Han", "Tang", "Ming", "Qing"], correct: 2 },
+        { text: "Which protocol assigns IP addresses automatically on a network?", options: ["DNS", "DHCP", "FTP", "SMTP"], correct: 1 },
+        { text: "What percentage of the Earth's surface is covered by water?", options: ["51%", "61%", "71%", "81%"], correct: 2 },
+        { text: "Who wrote 'Things Fall Apart'?", options: ["Wole Soyinka", "Ngugi wa Thiong'o", "Chinua Achebe", "Ben Okri"], correct: 2 },
+        { text: "In computing, what does 'CPU' stand for?", options: ["Central Processing Unit", "Computer Power Unit", "Core Processing Utility", "Central Program Uploader"], correct: 0 }
+      ]
+    },
+    {
+      name: "Batch 2 — Mix (Sports, Business, Entertainment, Geography)",
+      questions: [
+        { text: "How many players are on a standard football (soccer) team on the pitch?", options: ["9", "10", "11", "12"], correct: 2 },
+        { text: "Which company is the world's largest by market capitalisation (as of recent years)?", options: ["Amazon", "Microsoft", "Apple", "Alphabet"], correct: 2 },
+        { text: "In which country was the FIFA World Cup held in 2022?", options: ["Russia", "Brazil", "United Arab Emirates", "Qatar"], correct: 3 },
+        { text: "What is the longest-running animated TV show in US history?", options: ["Family Guy", "South Park", "The Simpsons", "Futurama"], correct: 2 },
+        { text: "Which ocean lies between Africa and Australia?", options: ["Atlantic", "Pacific", "Indian", "Arctic"], correct: 2 },
+        { text: "What does IPO stand for in business?", options: ["Initial Public Offering", "Internal Profit Organisation", "Integrated Purchase Order", "International Policy Outline"], correct: 0 },
+        { text: "At which Olympic Games did Usain Bolt set the 100m world record of 9.58s?", options: ["Athens 2004", "Beijing 2008", "Berlin 2009 Worlds", "London 2012"], correct: 2 },
+        { text: "Which streaming platform produced 'Stranger Things'?", options: ["HBO Max", "Disney+", "Amazon Prime", "Netflix"], correct: 3 },
+        { text: "What is the currency of Japan?", options: ["Yuan", "Won", "Yen", "Baht"], correct: 2 },
+        { text: "Which sport uses a shuttlecock?", options: ["Squash", "Badminton", "Table Tennis", "Racquetball"], correct: 1 },
+        { text: "In business, what does 'B2B' mean?", options: ["Back to Basics", "Business to Business", "Brand to Buyer", "Budget to Budget"], correct: 1 },
+        { text: "Which continent is the Sahara Desert located on?", options: ["Asia", "Australia", "South America", "Africa"], correct: 3 },
+        { text: "Who directed the 'Dark Knight' trilogy?", options: ["Steven Spielberg", "Christopher Nolan", "Ridley Scott", "James Cameron"], correct: 1 },
+        { text: "Which tennis Grand Slam is played on clay courts?", options: ["Wimbledon", "US Open", "Australian Open", "French Open"], correct: 3 },
+        { text: "What does 'GDP' stand for?", options: ["Gross Domestic Product", "General Development Plan", "Graded Distribution Policy", "Global Demand Projection"], correct: 0 },
+        { text: "The Maracanã stadium is located in which city?", options: ["Buenos Aires", "Bogotá", "São Paulo", "Rio de Janeiro"], correct: 3 },
+        { text: "Which country has the most Olympic gold medals in history?", options: ["China", "Russia", "Germany", "United States"], correct: 3 },
+        { text: "What is the highest-grossing film of all time (unadjusted for inflation)?", options: ["Titanic", "Avengers: Endgame", "Avatar", "Star Wars: The Force Awakens"], correct: 2 },
+        { text: "Where is the headquarters of the United Nations?", options: ["Geneva", "Brussels", "Washington D.C.", "New York City"], correct: 3 },
+        { text: "Which company created the iPhone?", options: ["Samsung", "Sony", "Apple", "Motorola"], correct: 2 },
+        { text: "How many Grand Slam titles did Roger Federer win?", options: ["17", "18", "20", "22"], correct: 2 },
+        { text: "What is the smallest country in the world by area?", options: ["Monaco", "San Marino", "Vatican City", "Liechtenstein"], correct: 2 },
+        { text: "Which award is considered the highest honour in cinema?", options: ["BAFTA", "Golden Globe", "Emmy", "Academy Award (Oscar)"], correct: 3 },
+        { text: "What does 'ROI' stand for in business?", options: ["Rate of Income", "Return on Investment", "Revenue Over Interest", "Risk of Inflation"], correct: 1 },
+        { text: "Which country invented the sport of basketball?", options: ["Canada", "United States", "Brazil", "United Kingdom"], correct: 1 },
+        { text: "Mount Kilimanjaro is located in which country?", options: ["Kenya", "Uganda", "Ethiopia", "Tanzania"], correct: 3 },
+        { text: "Which music artist holds the record for most Grammy wins?", options: ["Michael Jackson", "Stevie Wonder", "Beyoncé", "Georg Solti"], correct: 3 },
+        { text: "What is the primary purpose of a company's balance sheet?", options: ["Showing monthly cash flow", "Listing employee salaries", "Showing assets, liabilities and equity", "Projecting future revenues"], correct: 2 },
+        { text: "In which city is the Louvre Museum located?", options: ["Rome", "Madrid", "London", "Paris"], correct: 3 },
+        { text: "How many continents are there on Earth?", options: ["5", "6", "7", "8"], correct: 2 }
+      ]
+    },
+    {
+      name: "Batch 3 — Mix (Science & Tech, History, Geography, General Knowledge)",
+      questions: [
+        { text: "What is the chemical formula for water?", options: ["HO2", "H2O2", "H2O", "OH"], correct: 2 },
+        { text: "Which empire was ruled by Genghis Khan?", options: ["Ottoman", "Mongol", "Byzantine", "Persian"], correct: 1 },
+        { text: "What is the capital of Brazil?", options: ["São Paulo", "Rio de Janeiro", "Salvador", "Brasília"], correct: 3 },
+        { text: "In what decade was the internet made publicly available?", options: ["1970s", "1980s", "1990s", "2000s"], correct: 2 },
+        { text: "Which country has the most natural lakes in the world?", options: ["Russia", "Brazil", "United States", "Canada"], correct: 3 },
+        { text: "What is the atomic number of Carbon?", options: ["4", "6", "8", "12"], correct: 1 },
+        { text: "The Battle of Hastings took place in which year?", options: ["1040", "1066", "1095", "1215"], correct: 1 },
+        { text: "Which search engine has the highest global market share?", options: ["Bing", "Yahoo", "Google", "DuckDuckGo"], correct: 2 },
+        { text: "What is the largest desert in the world (including cold deserts)?", options: ["Sahara", "Arabian", "Gobi", "Antarctic"], correct: 3 },
+        { text: "Which organ in the human body produces insulin?", options: ["Liver", "Kidney", "Pancreas", "Spleen"], correct: 2 },
+        { text: "Who was the first person to walk on the moon?", options: ["Buzz Aldrin", "Yuri Gagarin", "Neil Armstrong", "Michael Collins"], correct: 2 },
+        { text: "What is the term for software designed to harm a computer system?", options: ["Spyware", "Firmware", "Malware", "Shareware"], correct: 2 },
+        { text: "The apartheid regime in South Africa ended formally in which year?", options: ["1990", "1992", "1994", "1996"], correct: 2 },
+        { text: "Which mountain range separates Europe from Asia?", options: ["Alps", "Carpathians", "Ural Mountains", "Caucasus"], correct: 2 },
+        { text: "What does 'AI' stand for in technology?", options: ["Automated Internet", "Advanced Integration", "Artificial Intelligence", "Algorithmic Interface"], correct: 2 },
+        { text: "The Eiffel Tower was built for which international event?", options: ["Olympic Games 1900", "World Fair 1889", "Bastille Day 1880", "French Revolution Centenary"], correct: 1 },
+        { text: "Which planet is known as the Red Planet?", options: ["Venus", "Jupiter", "Saturn", "Mars"], correct: 3 },
+        { text: "What is the hardest natural substance on Earth?", options: ["Ruby", "Quartz", "Diamond", "Sapphire"], correct: 2 },
+        { text: "The Amazon River flows through which continent?", options: ["Africa", "Asia", "North America", "South America"], correct: 3 },
+        { text: "Which technology company has the logo of a bitten apple?", options: ["Amazon", "Alphabet", "Apple", "Adobe"], correct: 2 },
+        { text: "The Suez Canal connects which two bodies of water?", options: ["Red Sea and Indian Ocean", "Mediterranean Sea and Red Sea", "Black Sea and Caspian Sea", "Persian Gulf and Arabian Sea"], correct: 1 },
+        { text: "In human anatomy, how many chambers does the heart have?", options: ["2", "3", "4", "6"], correct: 2 },
+        { text: "Who was the first African-American President of the United States?", options: ["Bill Clinton", "Jimmy Carter", "Barack Obama", "Colin Powell"], correct: 2 },
+        { text: "What does 'SSD' stand for in computing?", options: ["System Software Drive", "Solid State Drive", "Sequential Storage Device", "Secure Shared Disk"], correct: 1 },
+        { text: "Which country is home to the most UNESCO World Heritage Sites?", options: ["China", "Italy", "Spain", "France"], correct: 1 },
+        { text: "Which gas makes up approximately 78% of Earth's atmosphere?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"], correct: 2 },
+        { text: "The Renaissance period originated in which country?", options: ["France", "Greece", "Spain", "Italy"], correct: 3 },
+        { text: "How many bytes are in one kilobyte (in computing)?", options: ["100", "512", "1024", "2048"], correct: 2 },
+        { text: "What is the name of the longest mountain range in the world?", options: ["Himalayas", "Rocky Mountains", "Andes", "Alps"], correct: 2 },
+        { text: "Which blood type is considered the universal donor?", options: ["A+", "B-", "O-", "AB+"], correct: 2 }
+      ]
+    },
+    {
+      name: "Batch 4 — Mix (Sports, Entertainment, Business, General Knowledge)",
+      questions: [
+        { text: "Which country has won the most FIFA World Cups?", options: ["Germany", "Argentina", "Italy", "Brazil"], correct: 3 },
+        { text: "What does 'CEO' stand for?", options: ["Chief Economic Officer", "Corporate Executive Officer", "Chief Executive Officer", "Central Executive Organiser"], correct: 2 },
+        { text: "In basketball, how many points is a shot worth from beyond the arc?", options: ["1", "2", "3", "4"], correct: 2 },
+        { text: "Which artist painted the Mona Lisa?", options: ["Michelangelo", "Raphael", "Leonardo da Vinci", "Caravaggio"], correct: 2 },
+        { text: "What does the stock ticker 'AAPL' represent?", options: ["Amazon", "Alibaba", "Apple", "Alphabet"], correct: 2 },
+        { text: "In cricket, how many balls are in a standard over?", options: ["4", "5", "6", "8"], correct: 2 },
+        { text: "Which award is equivalent to the Oscars for television?", options: ["Golden Globe", "Grammy", "Emmy", "Tony"], correct: 2 },
+        { text: "What is the term for the interest charged on a loan expressed as a yearly rate?", options: ["APR", "ROE", "EBITDA", "P/E Ratio"], correct: 0 },
+        { text: "The Tour de France is a race involving which sport?", options: ["Running", "Swimming", "Cycling", "Triathlon"], correct: 2 },
+        { text: "Who created the fictional character James Bond?", options: ["John le Carré", "Ian Fleming", "Frederick Forsyth", "Graham Greene"], correct: 1 },
+        { text: "What is the name of the process by which companies buy back their own shares?", options: ["Dividend Payment", "Share Buyback", "Rights Issue", "Stock Split"], correct: 1 },
+        { text: "Which Nigerian author won the Nobel Prize for Literature in 1986?", options: ["Chinua Achebe", "Ben Okri", "Wole Soyinka", "Chimamanda Adichie"], correct: 2 },
+        { text: "In American football, how many points does a touchdown score?", options: ["3", "5", "6", "7"], correct: 2 },
+        { text: "Which platform is known for short-form videos and is owned by ByteDance?", options: ["Instagram", "Snapchat", "YouTube Shorts", "TikTok"], correct: 3 },
+        { text: "What does 'P&L' stand for in business?", options: ["Project and Launch", "Profit and Loss", "Purchase and Logistics", "Planning and Licensing"], correct: 1 },
+        { text: "In tennis, what is the term for a score of 40-40?", options: ["Break point", "Tiebreak", "Deuce", "Match point"], correct: 2 },
+        { text: "Which film won the first ever Academy Award for Best Picture?", options: ["Wings", "Sunrise", "The Jazz Singer", "Cavalcade"], correct: 0 },
+        { text: "What is 'venture capital'?", options: ["Government loans to businesses", "Financing provided to startups in exchange for equity", "Corporate bonds issued by tech firms", "Loans given to established large businesses"], correct: 1 },
+        { text: "Which country hosted the 2016 Summer Olympics?", options: ["China", "United Kingdom", "Brazil", "Japan"], correct: 2 },
+        { text: "What is the name of Elon Musk's space company?", options: ["Blue Origin", "Virgin Galactic", "SpaceX", "Rocket Lab"], correct: 2 },
+        { text: "In rugby union, how many players are on each team?", options: ["11", "13", "15", "17"], correct: 2 },
+        { text: "Which movie franchise features the character 'Tony Stark'?", options: ["DC Universe", "Star Wars", "Marvel Cinematic Universe", "X-Men Legends"], correct: 2 },
+        { text: "What does 'EBITDA' measure in business?", options: ["Export Barriers in Trade & Distribution Agreements", "Earnings Before Interest, Taxes, Depreciation and Amortisation", "Employee Benefits Including Tax and Deduction Allowance", "Estimated Business Income Tax Distribution Analysis"], correct: 1 },
+        { text: "How many players are on a basketball court per team during play?", options: ["4", "5", "6", "7"], correct: 1 },
+        { text: "Which streaming platform is owned by Disney?", options: ["Peacock", "Hulu only", "Disney+", "Paramount+"], correct: 2 },
+        { text: "In business, what is a 'market monopoly'?", options: ["When two companies share equal market power", "When a single seller dominates an entire market", "When prices are regulated by the government", "When a market has more buyers than sellers"], correct: 1 },
+        { text: "The Ballon d'Or award is given to the best player in which sport?", options: ["Basketball", "Tennis", "Football (Soccer)", "Cricket"], correct: 2 },
+        { text: "Which company introduced the first commercially successful smartphone?", options: ["Nokia", "Motorola", "BlackBerry", "Apple (iPhone)"], correct: 3 },
+        { text: "What is the minimum number of wickets a team must take to bowl the opposition out in cricket?", options: ["8", "9", "10", "11"], correct: 2 },
+        { text: "In which city is the headquarters of the African Union?", options: ["Nairobi", "Lagos", "Cairo", "Addis Ababa"], correct: 3 }
+      ]
+    },
+    {
+      name: "Batch 5 — Mix (All Categories — Final Round)",
+      questions: [
+        { text: "What is the largest organ in the human body?", options: ["Liver", "Brain", "Lungs", "Skin"], correct: 3 },
+        { text: "Who founded the company Amazon?", options: ["Bill Gates", "Mark Zuckerberg", "Jeff Bezos", "Larry Page"], correct: 2 },
+        { text: "In which year did the Titanic sink?", options: ["1908", "1910", "1912", "1915"], correct: 2 },
+        { text: "What is the most spoken language in the world by number of native speakers?", options: ["English", "Spanish", "Hindi", "Mandarin Chinese"], correct: 3 },
+        { text: "Which country is the largest producer of crude oil in the world?", options: ["Saudi Arabia", "Russia", "United States", "Iraq"], correct: 2 },
+        { text: "What is the chemical symbol for Iron?", options: ["Ir", "I", "Fe", "Fr"], correct: 2 },
+        { text: "In which sport would you perform a 'slam dunk'?", options: ["Volleyball", "Basketball", "Handball", "Water Polo"], correct: 1 },
+        { text: "What does 'HTML' stand for?", options: ["HyperText Markup Language", "High Transfer Markup Layer", "HyperText Management Logic", "Hosted Text Markup Language"], correct: 0 },
+        { text: "The Pyramids of Giza are located near which city?", options: ["Luxor", "Alexandria", "Aswan", "Cairo"], correct: 3 },
+        { text: "What is the term for the annual payment made to shareholders from a company's profits?", options: ["Coupon", "Interest", "Dividend", "Bonus"], correct: 2 },
+        { text: "In which sport is the 'butterfly stroke' used?", options: ["Athletics", "Water Polo", "Swimming", "Diving"], correct: 2 },
+        { text: "How many strings does a standard guitar have?", options: ["4", "5", "6", "7"], correct: 2 },
+        { text: "What is the capital of South Africa's legislative branch?", options: ["Johannesburg", "Durban", "Cape Town", "Pretoria"], correct: 2 },
+        { text: "Which mathematician is known for the theorem relating the sides of a right triangle?", options: ["Euclid", "Pythagoras", "Archimedes", "Thales"], correct: 1 },
+        { text: "How many time zones does Russia span?", options: ["9", "10", "11", "12"], correct: 2 },
+        { text: "What is the name of the effect where light bends as it passes through different mediums?", options: ["Reflection", "Diffraction", "Refraction", "Dispersion"], correct: 2 },
+        { text: "Which country is the largest by land area?", options: ["China", "Canada", "United States", "Russia"], correct: 3 },
+        { text: "Who wrote the play 'Romeo and Juliet'?", options: ["Christopher Marlowe", "Ben Jonson", "John Milton", "William Shakespeare"], correct: 3 },
+        { text: "In business, what does 'B2C' mean?", options: ["Budget to Capital", "Business to Consumer", "Brand to Customer", "Business to Corporation"], correct: 1 },
+        { text: "Which West African country was formerly known as the Gold Coast?", options: ["Nigeria", "Ivory Coast", "Ghana", "Senegal"], correct: 2 },
+        { text: "What is the name of the world's largest coral reef system?", options: ["Mesoamerican Reef", "Coral Triangle", "Red Sea Reef", "Great Barrier Reef"], correct: 3 },
+        { text: "In computing, what does 'URL' stand for?", options: ["Universal Resource Locator", "Uniform Resource Locator", "Unified Retrieval Link", "User Reference Location"], correct: 1 },
+        { text: "Which event triggered the start of World War I?", options: ["Sinking of the Lusitania", "Invasion of Poland", "Assassination of Archduke Franz Ferdinand", "The Zimmermann Telegram"], correct: 2 },
+        { text: "In which sport does a player earn points by serving an ace?", options: ["Cricket", "Badminton", "Squash", "Tennis"], correct: 3 },
+        { text: "What is the term for when a central bank raises interest rates to reduce inflation?", options: ["Quantitative Easing", "Monetary Tightening", "Fiscal Stimulus", "Currency Devaluation"], correct: 1 },
+        { text: "What is the national language of Brazil?", options: ["Spanish", "French", "English", "Portuguese"], correct: 3 },
+        { text: "What year was the first iPhone released?", options: ["2005", "2006", "2007", "2008"], correct: 2 },
+        { text: "Which famous physicist developed the laws of motion and universal gravitation?", options: ["Galileo Galilei", "Johannes Kepler", "Isaac Newton", "Robert Hooke"], correct: 2 },
+        { text: "Which continent has the most countries?", options: ["Asia", "Americas", "Europe", "Africa"], correct: 3 },
+        { text: "What is the name of the international agreement aimed at reducing carbon emissions signed in 2015?", options: ["Kyoto Protocol", "Copenhagen Accord", "Paris Agreement", "Montreal Protocol"], correct: 2 }
+      ]
+    }
+  ];
+
+  try {
+    const existing = JSON.parse(localStorage.getItem('uog_question_bank') || '[]');
+    // Prepend the 5 batches so they appear first in the bank
+    const merged = [...batches.map(b => ({ ...b, savedAt: Date.now() })), ...existing];
+    localStorage.setItem('uog_question_bank', JSON.stringify(merged));
+    localStorage.setItem(SEED_KEY, '1');
+    console.log('[QuizApp] Question bank seeded: 5 batches × 30 questions loaded.');
+  } catch(e) {
+    console.warn('[QuizApp] Could not seed question bank:', e);
+  }
+})();
+
 </script>
 </body>
 </html>
